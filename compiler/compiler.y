@@ -139,7 +139,7 @@
 
 File:
      /* Vide */
-    | t_int t_main t_op t_cp t_oa { current_depth++; } Instructions t_ca { current_depth--; display_table(); display_output(); }
+    | t_int t_main t_op t_cp t_oa { current_depth++; } Instructions t_ca { current_depth--; if (cmpt_error == 0) {display_table(); printf("main:\n"); display_output();} }
     ;
 
 Instructions:
