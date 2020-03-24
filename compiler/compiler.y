@@ -83,34 +83,35 @@
       int adr_first_operand = get_last_symbol()-1;
       int adr_second_operand = get_last_symbol();
       int new_adr;
-      switch(operation_code) {
-          case(0):
-              add_to_output("EQU %d %d %d",adr_first_operand,adr_first_operand,adr_second_operand);
-              break;
-
-          case(1):
-              add_to_output("INF %d %d %d",adr_first_operand,adr_first_operand,adr_second_operand);
-              break;
-
-          case(2):
-              new_adr = push_symbol("$", current_depth, 0);
-              add_to_output("INF %d %d %d",new_adr,adr_first_operand,adr_second_operand);
-              add_to_output("EQU %d %d %d",adr_first_operand,adr_first_operand,adr_second_operand);
-              add_to_output("ADD %d %d %d",adr_first_operand,adr_first_operand,new_adr);
-              pop_symbol();
-              break;
-
-          case(3):
-              add_to_output("SUP %d %d %d",adr_first_operand,adr_first_operand,adr_second_operand);
-              break;
-
-          case(4):
-              new_adr = push_symbol("$", current_depth, 0);
-              add_to_output("SUP %d %d %d",new_adr,adr_first_operand,adr_second_operand);
-              add_to_output("EQU %d %d %d",adr_first_operand,adr_first_operand,adr_second_operand);
-              add_to_output("ADD %d %d %d",adr_first_operand,adr_first_operand,new_adr);
-              pop_symbol();
-              break;
+      if(strcmp(operation_code,"==")==0) {
+        add_to_output("EQU %d %d %d",adr_first_operand,adr_first_operand,adr_second_operand);
+      }
+      else if(strcmp(operation_code,"!=")==0) {
+        new_adr = push_symbol("$", current_depth, 0);
+        add_to_output("INF %d %d %d",new_adr,adr_first_operand,adr_second_operand);
+        add_to_output("SUP %d %d %d",adr_first_operand,adr_first_operand,adr_second_operand);
+        add_to_output("ADD %d %d %d",adr_first_operand,adr_first_operand,new_adr);
+        pop_symbol();
+      }
+      else if(strcmp(operation_code,"<")==0) {
+        add_to_output("INF %d %d %d",adr_first_operand,adr_first_operand,adr_second_operand);
+      }
+      else if(strcmp(operation_code,"<=")==0) {
+        new_adr = push_symbol("$", current_depth, 0);
+        add_to_output("INF %d %d %d",new_adr,adr_first_operand,adr_second_operand);
+        add_to_output("EQU %d %d %d",adr_first_operand,adr_first_operand,adr_second_operand);
+        add_to_output("ADD %d %d %d",adr_first_operand,adr_first_operand,new_adr);
+        pop_symbol();
+      }
+      else if(strcmp(operation_code,">")==0) {
+        add_to_output("SUP %d %d %d",adr_first_operand,adr_first_operand,adr_second_operand);
+      }
+      else if(strcmp(operation_code,">=")==0) {
+        new_adr = push_symbol("$", current_depth, 0);
+        add_to_output("SUP %d %d %d",new_adr,adr_first_operand,adr_second_operand);
+        add_to_output("EQU %d %d %d",adr_first_operand,adr_first_operand,adr_second_operand);
+        add_to_output("ADD %d %d %d",adr_first_operand,adr_first_operand,new_adr);
+        pop_symbol();
       }
       pop_symbol();
   }
@@ -127,7 +128,7 @@
 %token t_add t_mul t_sou t_div t_eq
 %token t_op t_cp t_oa t_ca
 %token t_cr t_space t_tab t_comma t_sc
-%token t_checkeq t_checkless t_checklteq t_checkgreat t_checkgrteq
+%token t_checkeq t_checkneq t_checkless t_checklteq t_checkgreat t_checkgrteq
 %token t_if t_while
 %token <Integer> t_expnum
 %token <Integer> t_num
@@ -136,7 +137,7 @@
 %type <Integer> save_line_number
 
 %right t_eq
-%left t_checkeq
+%left t_checkeq t_checkneq
 %left t_add t_sou
 %left t_mul t_div
 
@@ -175,7 +176,7 @@ While_Loop:
     }
     save_line_number t_oa { current_depth++; } Instructions {
         add_to_instruction(output.instructions[$7], output.last_line+1);
-        add_to_output("JMP %d", $2);
+        add_to_output("JMP %d", ($2)+1);
     } t_ca { current_depth--; }
 
 save_line_number: { $$ = output.last_line-1; }
