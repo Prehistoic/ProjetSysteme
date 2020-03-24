@@ -27,6 +27,7 @@ spaces [ \t\n]+
 "," return t_comma;
 ";" return t_sc;
 "if" return t_if;
+"else" return t_else;
 "while" return t_while;
 "==" return t_checkeq;
 "!=" return t_checkneq;

@@ -133,7 +133,7 @@
 %token t_op t_cp t_oa t_ca
 %token t_cr t_space t_tab t_comma t_sc
 %token t_checkeq t_checkneq t_checkless t_checklteq t_checkgreat t_checkgrteq
-%token t_if t_while
+%token t_if t_else t_while
 %token <Integer> t_expnum
 %token <Integer> t_num
 %token <Variable> t_var
@@ -171,7 +171,13 @@ If_Statement:
     save_line_number t_oa { current_depth++; } Instructions {
         add_to_instruction(output.instructions[$6], output.last_line);
     }
-     t_ca { current_depth--; }
+    t_ca { current_depth--; } Else_Statement
+
+Else_Statement:
+     /* Vide */
+    | t_else t_oa { current_depth++; } Instructions t_ca { current_depth--; }
+    | t_else If_Statement
+    ;
 
 While_Loop:
     t_while save_line_number t_op Expression t_cp {
@@ -181,7 +187,8 @@ While_Loop:
     save_line_number t_oa { current_depth++; } Instructions {
         add_to_instruction(output.instructions[$7], output.last_line+1);
         add_to_output("JMP %d", ($2)+1);
-    } t_ca { current_depth--; }
+    }
+    t_ca { current_depth--; }
 
 save_line_number: { $$ = output.last_line-1; }
 
