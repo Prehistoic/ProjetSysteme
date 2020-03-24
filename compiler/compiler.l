@@ -29,6 +29,7 @@ spaces [ \t\n]+
 "if" return t_if;
 "while" return t_while;
 "==" return t_checkeq;
+"!=" return t_checkneq;
 "<" return t_checkless;
 "<=" return t_checklteq;
 ">" return t_checkgreat;
