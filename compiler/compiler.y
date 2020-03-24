@@ -57,6 +57,12 @@
       }
   }
 
+  void add_to_instruction(char *instruction, int line) {
+    char buffer[32];
+    sprintf(buffer, "%d", line);
+    strcpy(instruction, strcat(instruction, buffer));
+  }
+
   // Gestion des différentes opérations
   void exec_operation(const char* operator) {
       int adr_first_operand = get_last_symbol()-1;
@@ -157,20 +163,17 @@ If_Statement:
         add_to_output("JMF %d ", adr_condition_result);
     }
     save_line_number t_oa { current_depth++; } Instructions {
-        char * old_instruction = output.instructions[$6];
-        char buffer[32];
-        sprintf(buffer,"%d",output.last_line);
-        char * instruction = strcat(old_instruction,buffer);
-        strcpy(output.instructions[$6],instruction);
+        add_to_instruction(output.instructions[$6], output.last_line);
     }
      t_ca { current_depth--; }
 
 While_Loop:
     t_while save_line_number t_op Condition t_cp {
         int adr_condition_result = get_last_symbol();
-        add_to_output("JMF %d TBD", adr_condition_result);
+        add_to_output("JMF %d ", adr_condition_result);
     }
-    t_oa { current_depth++; } Instructions {
+    save_line_number t_oa { current_depth++; } Instructions {
+        add_to_instruction(output.instructions[$7], output.last_line+1);
         add_to_output("JMP %d", $2);
     } t_ca { current_depth--; }
 
