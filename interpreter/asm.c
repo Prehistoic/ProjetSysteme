@@ -15,13 +15,13 @@ void execute()
 {
   int i = 0, pass;
   char c;
-  printf("\e[1;1H\e[2J");
+  clear_console();
   print_registers();
   print_instructions(0);
   while (i < cmpt_instructions)
   {
     pass = print_input_mode(i);
-    printf("\e[1;1H\e[2J");
+    clear_console();
     if (pass)
     {
       i = execute_instruction(i);
@@ -30,7 +30,7 @@ void execute()
     print_instructions(i);
     print_printbuffer();
   }
-  printf("\e[1;1H\e[2J");
+  clear_console();
   print_registers();
   print_instructions(cmpt_instructions);
   print_printbuffer();
@@ -90,7 +90,7 @@ int execute_instruction(int index)
     regs[inst.val1] = regs[inst.val2] == regs[inst.val3];
     break;
   }
-  return index++;
+  return ++index;
 }
 
 /* AFFICHAGE */
@@ -150,7 +150,7 @@ void print_instruction(struct instruction inst)
 void print_program()
 {
   int i;
-  printf("\e[1;1H\e[2J");
+  clear_console();
   for (i = 0; i < cmpt_instructions; i++)
   {
     printf("%5d  ", i + 1);
@@ -229,4 +229,9 @@ int check_breakpoints(int line)
       return 1;
   }
   return 0;
+}
+
+void clear_console()
+{
+  printf("\e[1;1H\e[2J");
 }
