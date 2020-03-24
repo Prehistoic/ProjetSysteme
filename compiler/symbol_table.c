@@ -31,7 +31,7 @@ int find_symbol(const char* id, int depth)
     for(int i=0; i<my_table.size; i++)
     {
         struct symbol* current = &(my_table.symbols[i]);
-        if(current->depth == depth)
+        if(current->depth <= depth)
             if(!strcmp(current->id, id))
                 return i;
     }
@@ -63,14 +63,13 @@ int get_const(const char* id, int depth)
 
 void display_table()
 {
-    printf("\nSymbol table :\n");
+    printf("Symbol table :\n");
     for(int i=0; i<my_table.size; i++)
     {
         struct symbol* current = &(my_table.symbols[i]);
         int depth = current->depth;
-        printf("index=%d", i);
-        for(int j=0; j<depth; j++)
-            printf("\t");
-        printf("id=%s\tconst=%d\tinit=%d\n",current->id,current->constant,current->initialized);
+        printf("index=%d\t", i);
+        printf("id=%s\tconst=%d\tinit=%d\tdepth=%d\n",current->id,current->constant,current->initialized,current->depth);
     }
+    printf("\n");
 }

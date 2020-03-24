@@ -1,0 +1,10 @@
+*.o
+*.txt
+*.s
+lex.yy.*
+y.tab.*
+*.output
+source.l
+interpreter
+interpreter.exe
+/.vscode

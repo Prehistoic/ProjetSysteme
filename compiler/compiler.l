@@ -37,11 +37,11 @@ spaces [ \t\n]+
 [0-9]+[eE][+]?[0-9]+ {
     yylval.Integer=(int)atof(yytext);
     return t_expnum;
-    }
+}
 [0-9]+ {
     yylval.Integer=atoi(yytext);
     return t_num;
-    }
+}
 [a-zA-Z][a-zA-Z0-9_]* {
     strcpy(yylval.Variable, yytext);
     return t_var;
