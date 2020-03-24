@@ -3,7 +3,7 @@
 
 struct symbol
 {
-  char *id;
+  char id[256];
   int depth;
   int constant;
   int initialized;
