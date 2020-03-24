@@ -11,6 +11,11 @@
 #define SOU 5
 #define MUL 6
 #define DIV 7
+#define JMP 8
+#define JMF 9
+#define INF 10
+#define SUP 11
+#define EQU 12
 
 struct instruction
 {
@@ -24,7 +29,7 @@ void execute();
 
 void add_instruction(int type, int val1, int val2, int val3);
 
-void execute_instruction(int index);
+int execute_instruction(int index);
 
 void print_registers();
 

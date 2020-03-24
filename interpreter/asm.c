@@ -24,8 +24,7 @@ void execute()
     printf("\e[1;1H\e[2J");
     if (pass)
     {
-      execute_instruction(i);
-      i++;
+      i = execute_instruction(i);
     }
     print_registers();
     print_instructions(i);
@@ -46,7 +45,7 @@ void add_instruction(int type, int val1, int val2, int val3)
   cmpt_instructions++;
 }
 
-void execute_instruction(int index)
+int execute_instruction(int index)
 {
   struct instruction inst = instructions[index];
 
@@ -74,7 +73,24 @@ void execute_instruction(int index)
   case DIV:
     regs[inst.val1] = regs[inst.val2] / regs[inst.val3];
     break;
+  case JMP:
+    return inst.val1;
+    break;
+  case JMF:
+    if (regs[inst.val1] == 0)
+      return inst.val2;
+    break;
+  case INF:
+    regs[inst.val1] = regs[inst.val2] < regs[inst.val3];
+    break;
+  case SUP:
+    regs[inst.val1] = regs[inst.val2] > regs[inst.val3];
+    break;
+  case EQU:
+    regs[inst.val1] = regs[inst.val2] == regs[inst.val3];
+    break;
   }
+  return index++;
 }
 
 /* AFFICHAGE */
@@ -84,7 +100,7 @@ int cmpt_breakpoints = 0;
 
 char mode = '\n';
 
-char *str_instructions[7] = {"COP", "AFC", "PRI", "ADD", "SOU", "MUL", "DIV"};
+char *str_instructions[12] = {"COP", "AFC", "PRI", "ADD", "SOU", "MUL", "DIV", "JMP", "JMF", "INF", "SUP", "EQU"};
 
 void print_registers()
 {

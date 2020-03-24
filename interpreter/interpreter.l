@@ -18,6 +18,11 @@ spaces [ \t\n]+
 "SOU" return t_sou;
 "MUL" return t_mul;
 "DIV" return t_div;
+"JMP" return t_jmp;
+"JMF" return t_jmf;
+"INF" return t_inf;
+"SUP" return t_sup;
+"EQU" return t_equ;
 [0-9]+ {
   yylval.Valeur=atoi(yytext);
   return t_val;
