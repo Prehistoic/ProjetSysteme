@@ -129,6 +129,7 @@
 %type <Integer> save_line_number
 
 %right t_eq
+%left t_checkeq
 %left t_add t_sou
 %left t_mul t_div
 
@@ -138,7 +139,7 @@
 
 File:
      /* Vide */
-    | t_int t_main t_op t_cp t_oa { current_depth++; } Instructions t_ca { current_depth--; if (cmpt_error == 0) {display_table(); printf("main:\n"); display_output();} }
+    | t_int t_main t_op t_cp t_oa { current_depth++; } Instructions t_ca { current_depth--; display_table(); display_output(); }
     ;
 
 Instructions:
@@ -151,12 +152,16 @@ Instructions:
     ;
 
 If_Statement:
-    t_if save_line_number t_op Condition t_cp {
+    t_if t_op Condition t_cp {
         int adr_condition_result = get_last_symbol();
-        add_to_output("JMF %d TBD", adr_condition_result);
+        add_to_output("JMF %d ", adr_condition_result);
     }
-    t_oa { current_depth++; } Instructions {
-
+    save_line_number t_oa { current_depth++; } Instructions {
+        char * old_instruction = output.instructions[$6];
+        char buffer[32];
+        sprintf(buffer,"%d",output.last_line);
+        char * instruction = strcat(old_instruction,buffer);
+        strcpy(output.instructions[$6],instruction);
     }
      t_ca { current_depth--; }
 
@@ -169,7 +174,7 @@ While_Loop:
         add_to_output("JMP %d", $2);
     } t_ca { current_depth--; }
 
-save_line_number: { $$ = output.last_line; }
+save_line_number: { $$ = output.last_line-1; }
 
 Condition:
     Expression t_checkeq Expression { exec_condition(0); }
