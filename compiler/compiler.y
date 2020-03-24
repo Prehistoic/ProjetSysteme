@@ -58,7 +58,7 @@
       if (output_file != NULL) fprintf(output_file, "main:\n");
       for(int i=0; i<output.last_line; i++) {
           printf("%d\t%s\n",i,output.instructions[i]);
-          if (output_file != NULL) fprintf("\t%s\n",i,output.instructions[i]);
+          if (output_file != NULL) fprintf(output_file, "\t%s\n", output.instructions[i]);
       }
   }
 
@@ -151,7 +151,7 @@
 
 File:
      /* Vide */
-    | t_int t_main t_op t_cp t_oa { current_depth++; } Instructions t_ca { current_depth--; if (cmpt_error == 0) { display_table(); display_output(); } }
+    | t_int t_main t_op t_cp t_oa { current_depth++; } Instructions t_ca { current_depth--; if (cmpt_error == 0) { display_table(); display_output(); fclose(output_file); } }
     ;
 
 Instructions:
@@ -300,7 +300,7 @@ Print:
 int main(int argc, char *argv[]) {
   yyin = fopen(argv[1], "r");
   if (argc > 2) {
-      output_file = fopen(argv[1], "w");
+      output_file = fopen(argv[2], "w");
   }
   yyparse();
   return 0;
