@@ -15,6 +15,7 @@
   #include "symbol_table.h"
 
   int yylex(void);
+  int yydebug = 1;
 
   int cmpt_error = 0;
   void yyerror (char const *s) {
@@ -72,7 +73,7 @@
       set_initialized(var, current_depth);
   }
 
-  void exec_condition(int operation_code) {
+  void exec_condition(char * operation_code) {
       int adr_first_operand = get_last_symbol()-1;
       int adr_second_operand = get_last_symbol();
       int new_adr;
@@ -152,7 +153,7 @@ Instructions:
     ;
 
 If_Statement:
-    t_if t_op Condition t_cp {
+    t_if t_op Expression t_cp {
         int adr_condition_result = get_last_symbol();
         add_to_output("JMF %d ", adr_condition_result);
     }
@@ -166,7 +167,7 @@ If_Statement:
      t_ca { current_depth--; }
 
 While_Loop:
-    t_while save_line_number t_op Condition t_cp {
+    t_while save_line_number t_op Expression t_cp {
         int adr_condition_result = get_last_symbol();
         add_to_output("JMF %d TBD", adr_condition_result);
     }
@@ -175,14 +176,6 @@ While_Loop:
     } t_ca { current_depth--; }
 
 save_line_number: { $$ = output.last_line-1; }
-
-Condition:
-    Expression t_checkeq Expression { exec_condition(0); }
-    | Expression t_checkless Expression { exec_condition(1); }
-    | Expression t_checklteq Expression { exec_condition(2); }
-    | Expression t_checkgreat Expression { exec_condition(3); }
-    | Expression t_checkgrteq Expression { exec_condition(4); }
-    ;
 
 Declaration:
     t_int t_var {
@@ -278,6 +271,12 @@ Expression:
     | Expression t_sou Expression { exec_operation("SOU"); }
     | Expression t_mul Expression { exec_operation("MUL"); }
     | Expression t_div Expression { exec_operation("DIV"); }
+    | Expression t_checkeq Expression { exec_condition("=="); }
+    | Expression t_checkneq Expression { exec_condition("!="); }
+    | Expression t_checkless Expression { exec_condition("<"); }
+    | Expression t_checklteq Expression { exec_condition("<="); }
+    | Expression t_checkgreat Expression { exec_condition(">"); }
+    | Expression t_checkgrteq Expression { exec_condition(">="); }
     | t_op Expression t_cp
     ;
 
