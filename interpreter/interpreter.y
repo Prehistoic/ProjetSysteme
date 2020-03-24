@@ -26,7 +26,7 @@
 };
 
 %token t_main
-%token t_cop t_afc t_pri t_add t_sou t_mul t_div
+%token t_cop t_afc t_pri t_add t_sou t_mul t_div t_jmp t_jmf t_inf t_sup t_equ
 %token <Valeur> t_val
 
 %start File
@@ -51,6 +51,11 @@ Instruction:
   | t_sou t_val t_val t_val { add_instruction(SOU, $2, $3, $4); }
   | t_mul t_val t_val t_val { add_instruction(MUL, $2, $3, $4); }
   | t_div t_val t_val t_val { add_instruction(DIV, $2, $3, $4); }
+  | t_jmp t_val { add_instruction(JMP, $2, -1, -1); }
+  | t_jmf t_val t_val { add_instruction(JMF, $2, $3, -1); }
+  | t_inf t_val t_val t_val { add_instruction(INF, $2, $3, $4); }
+  | t_sup t_val t_val t_val { add_instruction(SUP, $2, $3, $4); }
+  | t_equ t_val t_val t_val { add_instruction(EQU, $2, $3, $4); }
   ;
 
 %%
