@@ -4,6 +4,9 @@ int main() {
     if(a==10) {
       a = 20;
     }
+    else {
+      a = 800;
+    }
     int b = 50;
     int c = 5;
     while(c<8) {

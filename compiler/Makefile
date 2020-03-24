@@ -20,4 +20,4 @@ lex.yy.c: compiler.l
 	lex compiler.l
 
 clean:
-	rm -rf compiler lex.yy.* y.tab.* *.o *.output
+	rm -rf compiler lex.yy.* y.tab.* *.o *.output *.asm

@@ -142,6 +142,7 @@
 
 %right t_eq
 %left t_checkeq t_checkneq
+%left t_checkless t_checklteq t_checkgreat t_checkgrteq
 %left t_add t_sou
 %left t_mul t_div
 
@@ -171,7 +172,13 @@ If_Statement:
     save_line_number t_oa { current_depth++; } Instructions {
         add_to_instruction(output.instructions[$6], output.last_line);
     }
-    t_ca { current_depth--; } Else_Statement
+    t_ca {
+        current_depth--;
+        add_to_output("JMP ");
+    }
+    save_line_number Else_Statement {
+        add_to_instruction(output.instructions[$13], output.last_line);
+    }
 
 Else_Statement:
      /* Vide */
@@ -217,49 +224,17 @@ MultipleDeclarations:
 
 Affectation_after_declaration:
      /* Vide */
-    | t_eq t_num {
-        int adr = find_symbol(last_var_read, current_depth);
-        add_to_output("AFC %d %d",adr,$2);
-        set_initialized(last_var_read, current_depth);
-    }
-    | t_eq t_expnum {
-        int adr = find_symbol(last_var_read, current_depth);
-        add_to_output("AFC %d %d",adr,$2);
-        set_initialized(last_var_read, current_depth);
-    }
     | t_eq Expression { exec_affectation(last_var_read); }
     ;
 
 Affectation:
     t_var t_eq Expression t_sc {
-      int init = get_const($1, current_depth);
-      if(init == 1) {
+      int constant = get_const($1, current_depth);
+      if(constant == 1) {
         yyerror("modification d'une constante");
       }
       else
         exec_affectation($1);
-    }
-    | t_var t_eq t_num {
-        int init = get_const($1, current_depth);
-        if(init == 1) {
-          yyerror("modification d'une constante");
-        }
-        else {
-          int adr = find_symbol($1, current_depth);
-          add_to_output("AFC %d %d",adr,$3);
-          set_initialized(last_var_read, current_depth);
-        }
-    }
-    | t_var t_eq t_expnum {
-        int init = get_const($1, current_depth);
-        if(init == 1) {
-          yyerror("modification d'une constante");
-        }
-        else {
-          int adr = find_symbol($1, current_depth);
-          add_to_output("AFC %d %d",adr,$3);
-          set_initialized(last_var_read, current_depth);
-        }
     }
     ;
 
