@@ -47,4 +47,6 @@ void add_breakpoint();
 
 int check_breakpoints(int line);
 
+void clear_console();
+
 #endif
