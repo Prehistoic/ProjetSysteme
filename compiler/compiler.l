@@ -26,6 +26,13 @@ spaces [ \t\n]+
 "=" return t_eq;
 "," return t_comma;
 ";" return t_sc;
+"if" return t_if;
+"while" return t_while;
+"==" return t_checkeq;
+"<" return t_checkless;
+"<=" return t_checklteq;
+">" return t_checkgreat;
+">=" return t_checkgrteq;
 "printf" return t_printf;
 [0-9]+[eE][+]?[0-9]+ {
     yylval.Integer=(int)atof(yytext);
