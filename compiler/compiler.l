@@ -4,6 +4,7 @@
 %}
 
 %option noyywrap
+%option yylineno
 
 spaces [ \t\n]+
 

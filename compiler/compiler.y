@@ -13,8 +13,12 @@
   #include "symbol_table.h"
 
   int yylex(void);
+
+  int cmpt_error = 0;
   void yyerror (char const *s) {
-      fprintf (stderr, "%s\n", s);
+      extern int yylineno;
+      fprintf (stderr, "ERROR (%d): %s\n", yylineno, s);
+      cmpt_error++;
   }
 
   extern FILE *yyin;
@@ -112,8 +116,7 @@ Affectation:
     t_var t_eq Expression t_sc {
       int init = get_const($1, current_depth);
       if(init == 1) {
-        printf("ERREUR TENTATIVE DE CHANGEMENT DE LA VALEUR DE LA CONSTANTE %s",$1);
-        exit(-1);
+        yyerror("modification d'une constante");
       }
       else
         exec_affectation($1);
@@ -134,8 +137,7 @@ Expression:
         int new_adr = push_symbol("$",current_depth, 0);
 
         if(!get_initialized($1, current_depth)) {
-          printf("ERREUR LA VARIABLE %s N'EST PAS INITIALISÉE !!!",$1);
-          exit(-1);
+            yyerror("variable non initialisée");
         }
 
         printf("\tCOP %d %d\n", new_adr, current_adr);
