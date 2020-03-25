@@ -242,10 +242,6 @@ MultipleDeclarations:
         update_last_var($2);
         int adr = push_symbol($2, current_depth, 0);
     } Affectation_after_declaration MultipleDeclarations
-    | t_const t_comma t_var {
-        update_last_var($3);
-        int adr = push_symbol($3, current_depth, 1);
-    } Affectation_after_declaration MultipleDeclarations
     | t_sc
     ;
 
