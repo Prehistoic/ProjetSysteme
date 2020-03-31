@@ -2,11 +2,14 @@ BISON := $(shell command -v bison 2> /dev/null)
 
 all: compiler
 
-compiler: y.tab.o lex.yy.o symbol_table.o
-	gcc -Wall y.tab.o lex.yy.o symbol_table.o -o compiler
+compiler: y.tab.o lex.yy.o symbol_table.o function_table.o
+	gcc -Wall y.tab.o lex.yy.o symbol_table.o function_table.o -o compiler
 
 symbol_table.o: symbol_table.c
 	gcc -c symbol_table.c
+
+function_table.o: function_table.c
+	gcc -c function_table.c
 
 y.tab.c: compiler.y
 ifdef BISON

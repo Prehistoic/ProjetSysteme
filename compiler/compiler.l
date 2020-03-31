@@ -1,6 +1,7 @@
 %{
   #include "y.tab.h"
   #include "symbol_table.h"
+  #include "function_table.h"
 %}
 
 %option noyywrap
@@ -13,6 +14,8 @@ spaces [ \t\n]+
 {spaces} ;
 
 "main" return t_main;
+"return" return t_return;
+"void" return t_void;
 "(" return t_op;
 ")" return t_cp;
 "{" return t_oa;

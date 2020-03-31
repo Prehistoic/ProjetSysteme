@@ -4,6 +4,7 @@
     #include <string.h>
     #include <stdarg.h>
     #include "symbol_table.h"
+    #include "function_table.h"
 }
 
 %{
@@ -13,6 +14,7 @@
   #include <string.h>
   #include <stdarg.h>
   #include "symbol_table.h"
+  #include "function_table.h"
 
   int yylex(void);
   int yydebug = 1;
@@ -30,7 +32,7 @@
   char last_var_read[256];
 
   void update_last_var(const char* new_var) {
-      memset(last_var_read,'\0',256);
+      memset(last_var_read, '\0', 256);
       strcpy(last_var_read, new_var);
   }
 
@@ -127,8 +129,8 @@
   char Variable[256];
 };
 
-%token t_main t_printf
-%token t_int t_const
+%token t_main t_printf t_return
+%token t_int t_const t_void
 %token t_add t_mul t_sou t_div t_eq
 %token t_op t_cp t_oa t_ca
 %token t_cr t_space t_tab t_comma t_sc
@@ -138,7 +140,9 @@
 %token <Integer> t_num
 %token <Variable> t_var
 
-%type <Integer> save_line_number
+%type <Integer> Save_Line_Number
+%type <Integer> Int_Function_Call
+%type <Integer> Params Multiple_Params Args Multiple_Args
 
 %right t_eq
 %left t_checkeq t_checkneq
@@ -151,17 +155,76 @@
 %%
 
 File:
-     /* Vide */
-    | t_int t_main t_op t_cp t_oa { current_depth++; } Instructions t_ca {
+    /* vide */
+  | { add_to_output("JMP "); } Functions
+  ;
+
+Functions:
+    Main
+  | Function_Declaration Functions
+  ;
+
+Main:
+    t_void t_main t_op t_cp Save_Line_Number t_oa { 
+      current_depth++; 
+      add_to_instruction(output.instructions[0], $5 + 1); 
+    } Instructions t_ca {
+      current_depth--;
+      if (cmpt_error == 0) {
+        display_table();
+        display_functions();
+        display_output();
+        if(output_file != NULL) {
+          fclose(output_file);
+        }
+      }
+    }
+    | t_int t_main t_op t_cp Save_Line_Number t_oa { 
+        current_depth++; 
+        add_to_instruction(output.instructions[0], $5); 
+      } Instructions t_return Expression t_sc t_ca {
         current_depth--;
         if (cmpt_error == 0) {
           display_table();
+          display_functions();
           display_output();
           if(output_file != NULL) {
             fclose(output_file);
           }
         }
       }
+    ;
+
+Function_Declaration:
+    t_int t_var t_op Params t_cp Save_Line_Number t_oa { 
+      add_function($2, $4, $6); 
+      current_depth++; 
+    } Instructions t_return Expression t_sc t_ca { current_depth--; }
+  | t_void t_var t_op Params t_cp Save_Line_Number t_oa { 
+      add_function($2, $4, $6); 
+      current_depth++; 
+    } Instructions t_return t_sc t_ca { current_depth--; }
+  | t_void t_var t_op Params t_cp Save_Line_Number t_oa { 
+      add_function($2, $4, $6); 
+      current_depth++; 
+    } Instructions t_ca { current_depth--; }
+  ;
+
+Params:
+      /* vide */ { $$ = 0; }
+    | t_void { $$ = 0; }
+    | t_int t_var {
+        update_last_var($2);
+        int adr = push_symbol($2, current_depth, 0);
+      } Multiple_Params { $$ = $4 + 1; }
+    ;
+
+Multiple_Params:
+      /* Vide */ { $$ = 0; }
+    | t_comma t_int t_var {
+        update_last_var($3);
+        int adr = push_symbol($3, current_depth, 0);
+      } Multiple_Params { $$ = $5 + 1; }
     ;
 
 Instructions:
@@ -175,6 +238,32 @@ Instruction:
     | If_Statement
     | While_Loop
     | Print
+    | Void_Function_Call
+    | Int_Function_Call t_sc
+    ;
+
+Void_Function_Call: 
+  t_var t_op Args t_cp t_sc { 
+    if ($3 != get_function_params($1)) yyerror("mauvais nombre de paramètres");
+    add_to_output("JMP %d", get_function_start($1));
+  }
+  ;
+
+Int_Function_Call:
+  t_var t_op Args t_cp { 
+    if ($3 != get_function_params($1)) yyerror("mauvais nombre de paramètres");
+    add_to_output("JMP %d", get_function_start($1));
+  }
+  ;
+
+Args:
+      /* vide */ { $$ = 0; }
+    | t_var Multiple_Args { $$ = $2 + 1; }
+    ;
+
+Multiple_Args:
+      /* Vide */ { $$ = 0; }
+    | t_comma Expression Multiple_Args { $$ = $3 + 1; }
     ;
 
 If_Statement:
@@ -182,26 +271,26 @@ If_Statement:
         int adr_condition_result = get_last_symbol();
         add_to_output("JMF %d ", adr_condition_result);
     }
-    save_line_number t_oa { current_depth++; } Instructions {
+    Save_Line_Number t_oa { current_depth++; } Instructions {
         add_to_output("JMP ");
         add_to_instruction(output.instructions[$6], output.last_line);
     }
     t_ca {
         current_depth--;
     }
-    save_line_number Else_Statement {
+    Save_Line_Number Else_Statement {
         add_to_instruction(output.instructions[$13], output.last_line);
     }
     | t_if t_op Expression t_cp {
         int adr_condition_result = get_last_symbol();
         add_to_output("JMF %d ", adr_condition_result);
     }
-    save_line_number { current_depth++; } Instruction {
+    Save_Line_Number { current_depth++; } Instruction {
         current_depth--;
         add_to_output("JMP ");
         add_to_instruction(output.instructions[$6], output.last_line);
     }
-    save_line_number Else_Statement {
+    Save_Line_Number Else_Statement {
         add_to_instruction(output.instructions[$10], output.last_line);
     }
     ;
@@ -213,27 +302,27 @@ Else_Statement:
     ;
 
 While_Loop:
-    t_while save_line_number t_op Expression t_cp {
+    t_while Save_Line_Number t_op Expression t_cp {
         int adr_condition_result = get_last_symbol();
         add_to_output("JMF %d ", adr_condition_result);
     }
-    save_line_number t_oa { current_depth++; } Instructions {
+    Save_Line_Number t_oa { current_depth++; } Instructions {
         add_to_instruction(output.instructions[$7], output.last_line+1);
         add_to_output("JMP %d", $2+1);
     }
     t_ca { current_depth--; }
-    | t_while save_line_number t_op Expression t_cp {
+    | t_while Save_Line_Number t_op Expression t_cp {
         int adr_condition_result = get_last_symbol();
         add_to_output("JMF %d ", adr_condition_result);
     }
-    save_line_number { current_depth++; } Instruction {
+    Save_Line_Number { current_depth++; } Instruction {
         current_depth--;
         add_to_instruction(output.instructions[$7], output.last_line+1);
         add_to_output("JMP %d", $2+1);
     }
     ;
 
-save_line_number:
+Save_Line_Number:
     { $$ = output.last_line-1; }
     ;
 
@@ -241,22 +330,22 @@ Declaration:
     t_int t_var {
         update_last_var($2);
         int adr = push_symbol($2, current_depth, 0);
-    } Affectation_after_declaration MultipleDeclarations
+    } Affectation_After_Declaration Multiple_Declarations
     | t_const t_int t_var {
         update_last_var($3);
         int adr = push_symbol($3, current_depth, 1);
-    } Affectation_after_declaration MultipleDeclarations
+    } Affectation_After_Declaration Multiple_Declarations
     ;
 
-MultipleDeclarations:
+Multiple_Declarations:
     t_comma t_var {
         update_last_var($2);
         int adr = push_symbol($2, current_depth, 0);
-    } Affectation_after_declaration MultipleDeclarations
+    } Affectation_After_Declaration Multiple_Declarations
     | t_sc
     ;
 
-Affectation_after_declaration:
+Affectation_After_Declaration:
      /* Vide */
     | t_eq Expression { exec_affectation(last_var_read); }
     ;
@@ -291,6 +380,10 @@ Expression:
 
         add_to_output("COP %d %d", new_adr, current_adr);
     }
+    | Int_Function_Call {
+        int new_adr = push_symbol("$", current_depth, 0);
+        add_to_output("AFC %d %d", new_adr, $1);
+      }
     | Expression t_add Expression { exec_operation("ADD"); }
     | Expression t_sou Expression { exec_operation("SOU"); }
     | Expression t_mul Expression { exec_operation("MUL"); }
