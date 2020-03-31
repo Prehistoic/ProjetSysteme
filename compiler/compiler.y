@@ -157,33 +157,49 @@ File:
 
 Instructions:
      /* Vide */
-    | Declaration Instructions
-    | Affectation Instructions
-    | If_Statement Instructions
-    | While_Loop Instructions
-    | Print Instructions
+    | Instruction Instructions
+    ;
+
+Instruction:
+      Declaration
+    | Affectation
+    | If_Statement
+    | While_Loop
+    | Print
     ;
 
 If_Statement:
-    t_if t_op Expression t_cp {
+      t_if t_op Expression t_cp {
+        int adr_condition_result = get_last_symbol();
+        add_to_output("JMF %d ", adr_condition_result);
+    }
+    save_line_number Instruction {
+        add_to_output("JMP ");
+        add_to_instruction(output.instructions[$6], output.last_line);
+    }
+    save_line_number Else_Statement {
+        add_to_instruction(output.instructions[$9], output.last_line);
+    }
+    | t_if t_op Expression t_cp {
         int adr_condition_result = get_last_symbol();
         add_to_output("JMF %d ", adr_condition_result);
     }
     save_line_number t_oa { current_depth++; } Instructions {
+        add_to_output("JMP ");
         add_to_instruction(output.instructions[$6], output.last_line);
     }
     t_ca {
         current_depth--;
-        add_to_output("JMP ");
     }
     save_line_number Else_Statement {
         add_to_instruction(output.instructions[$13], output.last_line);
     }
+    ;
 
 Else_Statement:
-     /* Vide */
+      /* vide */ { output.last_line--; }
     | t_else t_oa { current_depth++; } Instructions t_ca { current_depth--; }
-    | t_else If_Statement
+    | t_else Instruction
     ;
 
 While_Loop:
@@ -193,11 +209,22 @@ While_Loop:
     }
     save_line_number t_oa { current_depth++; } Instructions {
         add_to_instruction(output.instructions[$7], output.last_line+1);
-        add_to_output("JMP %d", ($2)+1);
+        add_to_output("JMP %d", $2+1);
     }
     t_ca { current_depth--; }
+    | t_while save_line_number t_op Expression t_cp {
+        int adr_condition_result = get_last_symbol();
+        add_to_output("JMF %d ", adr_condition_result);
+    }
+    save_line_number Instruction {
+        add_to_instruction(output.instructions[$7], output.last_line+1);
+        add_to_output("JMP %d", $2+1);
+    }
+    ;
 
-save_line_number: { $$ = output.last_line-1; }
+save_line_number: 
+    { $$ = output.last_line-1; } 
+    ;
 
 Declaration:
     t_int t_var {
@@ -214,10 +241,6 @@ MultipleDeclarations:
     t_comma t_var {
         update_last_var($2);
         int adr = push_symbol($2, current_depth, 0);
-    } Affectation_after_declaration MultipleDeclarations
-    | t_const t_comma t_var {
-        update_last_var($3);
-        int adr = push_symbol($3, current_depth, 1);
     } Affectation_after_declaration MultipleDeclarations
     | t_sc
     ;
