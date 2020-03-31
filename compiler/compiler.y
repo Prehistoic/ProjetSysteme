@@ -152,7 +152,16 @@
 
 File:
      /* Vide */
-    | t_int t_main t_op t_cp t_oa { current_depth++; } Instructions t_ca { current_depth--; if (cmpt_error == 0) { display_table(); display_output(); fclose(output_file); } }
+    | t_int t_main t_op t_cp t_oa { current_depth++; } Instructions t_ca {
+        current_depth--;
+        if (cmpt_error == 0) {
+          display_table();
+          display_output();
+          if(output_file != NULL) {
+            fclose(output_file);
+          }
+        }
+      }
     ;
 
 Instructions:
@@ -303,13 +312,10 @@ Print:
 %%
 
 int main(int argc, char *argv[]) {
-  if (argc == 3) {
-    yyin = fopen(argv[1], "r");
+  yyin = fopen(argv[1], "r");
+  if (argc>2) {
     output_file = fopen(argv[2], "w");
-    yyparse();
   }
-  else {
-    printf("Usage : ./compiler input_file output_file\n");
-  }
+  yyparse();
   return 0;
 }
