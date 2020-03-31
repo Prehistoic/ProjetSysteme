@@ -280,10 +280,13 @@ Print:
 %%
 
 int main(int argc, char *argv[]) {
-  yyin = fopen(argv[1], "r");
-  if (argc > 2) {
-      output_file = fopen(argv[2], "w");
+  if (argc == 3) {
+    yyin = fopen(argv[1], "r");
+    output_file = fopen(argv[2], "w");
+    yyparse();
   }
-  yyparse();
+  else {
+    printf("Usage : ./compiler input_file output_file\n");
+  }
   return 0;
 }
