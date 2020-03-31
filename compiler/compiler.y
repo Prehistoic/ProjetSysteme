@@ -182,17 +182,6 @@ If_Statement:
         int adr_condition_result = get_last_symbol();
         add_to_output("JMF %d ", adr_condition_result);
     }
-    save_line_number Instruction {
-        add_to_output("JMP ");
-        add_to_instruction(output.instructions[$6], output.last_line);
-    }
-    save_line_number Else_Statement {
-        add_to_instruction(output.instructions[$9], output.last_line);
-    }
-    | t_if t_op Expression t_cp {
-        int adr_condition_result = get_last_symbol();
-        add_to_output("JMF %d ", adr_condition_result);
-    }
     save_line_number t_oa { current_depth++; } Instructions {
         add_to_output("JMP ");
         add_to_instruction(output.instructions[$6], output.last_line);
@@ -203,12 +192,24 @@ If_Statement:
     save_line_number Else_Statement {
         add_to_instruction(output.instructions[$13], output.last_line);
     }
+    | t_if t_op Expression t_cp {
+        int adr_condition_result = get_last_symbol();
+        add_to_output("JMF %d ", adr_condition_result);
+    }
+    save_line_number { current_depth++; } Instruction {
+        current_depth--;
+        add_to_output("JMP ");
+        add_to_instruction(output.instructions[$6], output.last_line);
+    }
+    save_line_number Else_Statement {
+        add_to_instruction(output.instructions[$10], output.last_line);
+    }
     ;
 
 Else_Statement:
       /* vide */ { output.last_line--; }
     | t_else t_oa { current_depth++; } Instructions t_ca { current_depth--; }
-    | t_else Instruction
+    | t_else { current_depth++; } Instruction { current_depth--; }
     ;
 
 While_Loop:
@@ -225,7 +226,8 @@ While_Loop:
         int adr_condition_result = get_last_symbol();
         add_to_output("JMF %d ", adr_condition_result);
     }
-    save_line_number Instruction {
+    save_line_number { current_depth++; } Instruction {
+        current_depth--;
         add_to_instruction(output.instructions[$7], output.last_line+1);
         add_to_output("JMP %d", $2+1);
     }
