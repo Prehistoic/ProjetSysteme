@@ -169,7 +169,7 @@ Instruction:
     ;
 
 If_Statement:
-      t_if t_op Expression t_cp {
+    t_if t_op Expression t_cp {
         int adr_condition_result = get_last_symbol();
         add_to_output("JMF %d ", adr_condition_result);
     }
@@ -222,8 +222,8 @@ While_Loop:
     }
     ;
 
-save_line_number: 
-    { $$ = output.last_line-1; } 
+save_line_number:
+    { $$ = output.last_line-1; }
     ;
 
 Declaration:
