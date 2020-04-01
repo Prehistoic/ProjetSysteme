@@ -1,7 +1,7 @@
-void pri()
+void pri(int c, int d)
 {
-  int a = 10;
-  printf(3 + 2 + a);
+  c = 10;
+  printf(d);
 }
 
 void main()
@@ -9,8 +9,9 @@ void main()
   int a = 10;
   if (a == 10)
   {
+    int b = 50;
     a = 20;
-    pri();
+    pri(a,b);
   }
   printf(a);
 }

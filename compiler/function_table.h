@@ -8,6 +8,8 @@ struct function
   int function_start;
 };
 
+int get_func_index(const char *id);
+
 void add_function(const char *id, int nb_params, int function_start);
 
 int get_function_start(const char *id);

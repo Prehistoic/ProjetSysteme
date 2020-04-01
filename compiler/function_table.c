@@ -11,6 +11,10 @@ struct function_table
 
 struct function_table function_table = {0};
 
+int get_func_index(const char *id) {
+  return function_table.size-1;
+}
+
 void add_function(const char *id, int nb_params, int function_start)
 {
   struct function *new = &(function_table.functions[function_table.size]);

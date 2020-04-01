@@ -37,6 +37,8 @@
   }
 
   int current_depth = 0;
+  int current_func;
+  int const_status = 0;
 
   struct output_code {
       int last_line;
@@ -79,10 +81,10 @@
   }
 
   void exec_affectation(const char* var) {
-      int adr = find_symbol(var, current_depth);
+      int adr = find_symbol(var, current_depth, current_func);
       int last_adr = get_last_symbol();
       add_to_output("COP %d %d", adr, last_adr);
-      set_initialized(var, current_depth);
+      set_initialized(var, current_depth, current_func);
   }
 
   void exec_condition(char * operation_code) {
@@ -93,7 +95,7 @@
         add_to_output("EQU %d %d %d",adr_first_operand,adr_first_operand,adr_second_operand);
       }
       else if(strcmp(operation_code,"!=")==0) {
-        new_adr = push_symbol("$", current_depth, 0);
+        new_adr = push_symbol("$", current_depth, 0, current_func);
         add_to_output("INF %d %d %d",new_adr,adr_first_operand,adr_second_operand);
         add_to_output("SUP %d %d %d",adr_first_operand,adr_first_operand,adr_second_operand);
         add_to_output("ADD %d %d %d",adr_first_operand,adr_first_operand,new_adr);
@@ -103,7 +105,7 @@
         add_to_output("INF %d %d %d",adr_first_operand,adr_first_operand,adr_second_operand);
       }
       else if(strcmp(operation_code,"<=")==0) {
-        new_adr = push_symbol("$", current_depth, 0);
+        new_adr = push_symbol("$", current_depth, 0, current_func);
         add_to_output("INF %d %d %d",new_adr,adr_first_operand,adr_second_operand);
         add_to_output("EQU %d %d %d",adr_first_operand,adr_first_operand,adr_second_operand);
         add_to_output("ADD %d %d %d",adr_first_operand,adr_first_operand,new_adr);
@@ -113,7 +115,7 @@
         add_to_output("SUP %d %d %d",adr_first_operand,adr_first_operand,adr_second_operand);
       }
       else if(strcmp(operation_code,">=")==0) {
-        new_adr = push_symbol("$", current_depth, 0);
+        new_adr = push_symbol("$", current_depth, 0, current_func);
         add_to_output("SUP %d %d %d",new_adr,adr_first_operand,adr_second_operand);
         add_to_output("EQU %d %d %d",adr_first_operand,adr_first_operand,adr_second_operand);
         add_to_output("ADD %d %d %d",adr_first_operand,adr_first_operand,new_adr);
@@ -142,7 +144,10 @@
 
 %type <Integer> Save_Line_Number
 %type <Integer> Int_Function_Call
-%type <Integer> Params Multiple_Params Args Multiple_Args
+%type <Integer> Params
+%type <Integer> Multiple_Params
+%type <Integer> Args
+%type <Integer> Multiple_Args
 
 %right t_eq
 %left t_checkeq t_checkneq
@@ -165,9 +170,11 @@ Functions:
   ;
 
 Main:
-    t_void t_main t_op t_cp Save_Line_Number t_oa { 
-      current_depth++; 
-      add_to_instruction(output.instructions[0], $5 + 1); 
+    t_void t_main t_op t_cp Save_Line_Number t_oa {
+      add_function("main", 0, -1);
+      current_func = get_func_index("main");
+      current_depth++;
+      add_to_instruction(output.instructions[0], $5 + 1);
     } Instructions t_ca {
       current_depth--;
       if (cmpt_error == 0) {
@@ -179,9 +186,11 @@ Main:
         }
       }
     }
-    | t_int t_main t_op t_cp Save_Line_Number t_oa { 
-        current_depth++; 
-        add_to_instruction(output.instructions[0], $5); 
+    | t_int t_main t_op t_cp Save_Line_Number t_oa {
+        add_function("main", 0, -1);
+        current_func = get_func_index("main");
+        current_depth++;
+        add_to_instruction(output.instructions[0], $5);
       } Instructions t_return Expression t_sc t_ca {
         current_depth--;
         if (cmpt_error == 0) {
@@ -196,18 +205,22 @@ Main:
     ;
 
 Function_Declaration:
-    t_int t_var t_op Params t_cp Save_Line_Number t_oa { 
-      add_function($2, $4, $6); 
-      current_depth++; 
-    } Instructions t_return Expression t_sc t_ca { current_depth--; }
-  | t_void t_var t_op Params t_cp Save_Line_Number t_oa { 
-      add_function($2, $4, $6); 
-      current_depth++; 
-    } Instructions t_return t_sc t_ca { current_depth--; }
-  | t_void t_var t_op Params t_cp Save_Line_Number t_oa { 
-      add_function($2, $4, $6); 
-      current_depth++; 
-    } Instructions t_ca { current_depth--; }
+    t_int t_var t_op Params t_cp Save_Line_Number t_oa {
+      add_function($2, $4, $6 +1);
+      current_func = get_func_index($2);
+      current_depth++;
+    } Instructions t_return Expression t_sc t_ca {
+      current_depth--;
+      add_to_output("RET");
+    }
+  | t_void t_var t_op Params t_cp Save_Line_Number t_oa {
+      add_function($2, $4, $6 +1);
+      current_func = get_func_index($2);
+      current_depth++;
+    } Instructions t_ca {
+      current_depth--;
+      add_to_output("RET");
+    }
   ;
 
 Params:
@@ -215,7 +228,7 @@ Params:
     | t_void { $$ = 0; }
     | t_int t_var {
         update_last_var($2);
-        int adr = push_symbol($2, current_depth, 0);
+        int adr = push_symbol($2, current_depth, 0, current_func);
       } Multiple_Params { $$ = $4 + 1; }
     ;
 
@@ -223,7 +236,7 @@ Multiple_Params:
       /* Vide */ { $$ = 0; }
     | t_comma t_int t_var {
         update_last_var($3);
-        int adr = push_symbol($3, current_depth, 0);
+        int adr = push_symbol($3, current_depth, 0, current_func);
       } Multiple_Params { $$ = $5 + 1; }
     ;
 
@@ -239,26 +252,32 @@ Instruction:
     | While_Loop
     | Print
     | Void_Function_Call
-    | Int_Function_Call t_sc
     ;
 
-Void_Function_Call: 
-  t_var t_op Args t_cp t_sc { 
+Print:
+    t_printf t_op t_var t_cp t_sc {
+        int adr = find_symbol($3, current_depth, current_func);
+        add_to_output("PRI %d",adr);
+    }
+    ;
+
+Void_Function_Call:
+  t_var t_op Args t_cp t_sc {
     if ($3 != get_function_params($1)) yyerror("mauvais nombre de paramètres");
-    add_to_output("JMP %d", get_function_start($1));
+    add_to_output("CALL %d %d", get_function_start($1), output.last_line+1);
   }
   ;
 
 Int_Function_Call:
-  t_var t_op Args t_cp { 
+  t_var t_op Args t_cp {
     if ($3 != get_function_params($1)) yyerror("mauvais nombre de paramètres");
-    add_to_output("JMP %d", get_function_start($1));
+    add_to_output("CALL %d %d", get_function_start($1), output.last_line+1);
   }
   ;
 
 Args:
       /* vide */ { $$ = 0; }
-    | t_var Multiple_Args { $$ = $2 + 1; }
+    | Expression Multiple_Args { $$ = $2 + 1; }
     ;
 
 Multiple_Args:
@@ -329,20 +348,21 @@ Save_Line_Number:
 Declaration:
     t_int t_var {
         update_last_var($2);
-        int adr = push_symbol($2, current_depth, 0);
+        int adr = push_symbol($2, current_depth, 0, current_func);
     } Affectation_After_Declaration Multiple_Declarations
     | t_const t_int t_var {
         update_last_var($3);
-        int adr = push_symbol($3, current_depth, 1);
+        int adr = push_symbol($3, current_depth, 1, current_func);
+        const_status = 1;
     } Affectation_After_Declaration Multiple_Declarations
     ;
 
 Multiple_Declarations:
     t_comma t_var {
         update_last_var($2);
-        int adr = push_symbol($2, current_depth, 0);
+        int adr = push_symbol($2, current_depth, const_status, current_func);
     } Affectation_After_Declaration Multiple_Declarations
-    | t_sc
+    | t_sc { const_status = 0; }
     ;
 
 Affectation_After_Declaration:
@@ -352,7 +372,7 @@ Affectation_After_Declaration:
 
 Affectation:
     t_var t_eq Expression t_sc {
-      int constant = get_const($1, current_depth);
+      int constant = get_const($1, current_depth, current_func);
       if(constant == 1) {
         yyerror("modification d'une constante");
       }
@@ -363,25 +383,25 @@ Affectation:
 
 Expression:
     t_num {
-        int new_adr = push_symbol("$", current_depth, 0);
+        int new_adr = push_symbol("$", current_depth, 0, current_func);
         add_to_output("AFC %d %d", new_adr, $1);
     }
     | t_expnum {
-        int new_adr = push_symbol("$", current_depth, 0);
+        int new_adr = push_symbol("$", current_depth, 0, current_func);
         add_to_output("AFC %d %d", new_adr, $1);
     }
     | t_var {
-        int current_adr = find_symbol($1, current_depth);
-        int new_adr = push_symbol("$",current_depth, 0);
+        int current_adr = find_symbol($1, current_depth, current_func);
+        int new_adr = push_symbol("$",current_depth, 0, current_func);
 
-        if(!get_initialized($1, current_depth)) {
+        if(!get_initialized($1, current_depth, current_func)) {
             yyerror("variable non initialisée");
         }
 
         add_to_output("COP %d %d", new_adr, current_adr);
     }
     | Int_Function_Call {
-        int new_adr = push_symbol("$", current_depth, 0);
+        int new_adr = push_symbol("$", current_depth, 0, current_func);
         add_to_output("AFC %d %d", new_adr, $1);
       }
     | Expression t_add Expression { exec_operation("ADD"); }
@@ -395,13 +415,6 @@ Expression:
     | Expression t_checkgreat Expression { exec_condition(">"); }
     | Expression t_checkgrteq Expression { exec_condition(">="); }
     | t_op Expression t_cp
-    ;
-
-Print:
-    t_printf t_op t_var t_cp t_sc {
-        int adr = find_symbol($3, current_depth);
-        add_to_output("PRI %d",adr);
-    }
     ;
 
 %%
