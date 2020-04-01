@@ -6,6 +6,9 @@
 int regs[NB_REGISTRES];
 struct instruction instructions[MAX_INSTRUCTIONS];
 
+int lr_stack[MAX_LR_STACK];
+int cmpt_lr = 0;
+
 int cmpt_instructions = 0;
 
 int print_buffer[100];
@@ -89,6 +92,13 @@ int execute_instruction(int index)
   case EQU:
     regs[inst.val1] = regs[inst.val2] == regs[inst.val3];
     break;
+  case CALL:
+    lr_stack[cmpt_lr++] = inst.val2;
+    return inst.val1;
+    break;
+  case RET:
+    return lr_stack[--cmpt_lr];
+    break;
   }
   return ++index;
 }
@@ -100,7 +110,7 @@ int cmpt_breakpoints = 0;
 
 char mode = '\n';
 
-char *str_instructions[12] = {"COP", "AFC", "PRI", "ADD", "SOU", "MUL", "DIV", "JMP", "JMF", "INF", "SUP", "EQU"};
+char *str_instructions[14] = {"COP", "AFC", "PRI", "ADD", "SOU", "MUL", "DIV", "JMP", "JMF", "INF", "SUP", "EQU", "CALL", "RET"};
 
 void print_registers()
 {
@@ -140,7 +150,9 @@ void print_instructions(int line)
 
 void print_instruction(struct instruction inst)
 {
-  printf("%s %d", str_instructions[inst.type - 1], inst.val1);
+  printf("%s", str_instructions[inst.type - 1]);
+  if (inst.val1 != -1)
+    printf(" %d", inst.val1);
   if (inst.val2 != -1)
     printf(" %d", inst.val2);
   if (inst.val3 != -1)
@@ -153,7 +165,7 @@ void print_program()
   clear_console();
   for (i = 0; i < cmpt_instructions; i++)
   {
-    printf("%5d  ", i + 1);
+    printf("%5d  ", i);
     print_instruction(instructions[i]);
     printf("\n");
   }
