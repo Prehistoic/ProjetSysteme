@@ -1,7 +1,7 @@
-void pri(int c, int d)
+void pri(int a, int b)
 {
-  c = 10;
-  printf(d);
+  a = 10;
+  printf(b);
 }
 
 void main()
@@ -10,8 +10,15 @@ void main()
   if (a == 10)
   {
     int b = 50;
-    a = 20;
-    pri(a,b);
+    if (b == 40) {
+      printf(b);
+    }
+    else {
+      while (b < 60) {
+        printf(b);
+        b = b + 1;
+      }
+    }
   }
   printf(a);
 }

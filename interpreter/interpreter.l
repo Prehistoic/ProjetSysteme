@@ -23,6 +23,8 @@ spaces [ \t\n]+
 "INF" return t_inf;
 "SUP" return t_sup;
 "EQU" return t_equ;
+"CALL" return t_call;
+"RET" return t_ret;
 [0-9]+ {
   yylval.Valeur=atoi(yytext);
   return t_val;

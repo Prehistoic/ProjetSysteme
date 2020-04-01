@@ -173,10 +173,8 @@ Main:
     t_void t_main t_op t_cp Save_Line_Number t_oa {
       add_function("main", 0, -1);
       current_func = get_func_index("main");
-      current_depth++;
       add_to_instruction(output.instructions[0], $5 + 1);
     } Instructions t_ca {
-      current_depth--;
       if (cmpt_error == 0) {
         display_table();
         display_functions();
@@ -189,10 +187,8 @@ Main:
     | t_int t_main t_op t_cp Save_Line_Number t_oa {
         add_function("main", 0, -1);
         current_func = get_func_index("main");
-        current_depth++;
         add_to_instruction(output.instructions[0], $5);
       } Instructions t_return Expression t_sc t_ca {
-        current_depth--;
         if (cmpt_error == 0) {
           display_table();
           display_functions();
@@ -208,17 +204,13 @@ Function_Declaration:
     t_int t_var t_op Params t_cp Save_Line_Number t_oa {
       add_function($2, $4, $6 +1);
       current_func = get_func_index($2);
-      current_depth++;
     } Instructions t_return Expression t_sc t_ca {
-      current_depth--;
       add_to_output("RET");
     }
   | t_void t_var t_op Params t_cp Save_Line_Number t_oa {
       add_function($2, $4, $6 +1);
       current_func = get_func_index($2);
-      current_depth++;
     } Instructions t_ca {
-      current_depth--;
       add_to_output("RET");
     }
   ;
@@ -229,6 +221,7 @@ Params:
     | t_int t_var {
         update_last_var($2);
         int adr = push_symbol($2, current_depth, 0, current_func);
+        set_initialized($2, current_depth, current_func);
       } Multiple_Params { $$ = $4 + 1; }
     ;
 
@@ -237,6 +230,7 @@ Multiple_Params:
     | t_comma t_int t_var {
         update_last_var($3);
         int adr = push_symbol($3, current_depth, 0, current_func);
+        set_initialized($3, current_depth, current_func);
       } Multiple_Params { $$ = $5 + 1; }
     ;
 
@@ -286,59 +280,34 @@ Multiple_Args:
     ;
 
 If_Statement:
-    t_if t_op Expression t_cp {
+    t_if t_op Expression {
         int adr_condition_result = get_last_symbol();
         add_to_output("JMF %d ", adr_condition_result);
-    }
-    Save_Line_Number t_oa { current_depth++; } Instructions {
+        pop_symbol();
+    } t_cp Save_Line_Number t_oa { current_depth++; } Instructions {
         add_to_output("JMP ");
         add_to_instruction(output.instructions[$6], output.last_line);
     }
-    t_ca {
-        current_depth--;
-    }
-    Save_Line_Number Else_Statement {
-        add_to_instruction(output.instructions[$13], output.last_line);
-    }
-    | t_if t_op Expression t_cp {
-        int adr_condition_result = get_last_symbol();
-        add_to_output("JMF %d ", adr_condition_result);
-    }
-    Save_Line_Number { current_depth++; } Instruction {
-        current_depth--;
-        add_to_output("JMP ");
-        add_to_instruction(output.instructions[$6], output.last_line);
-    }
-    Save_Line_Number Else_Statement {
-        add_to_instruction(output.instructions[$10], output.last_line);
-    }
+    t_ca { current_depth--; } Save_Line_Number
+    Else_Statement { add_to_instruction(output.instructions[$13], output.last_line); }
     ;
 
 Else_Statement:
-      /* vide */ { output.last_line--; }
+     /* Vide */
     | t_else t_oa { current_depth++; } Instructions t_ca { current_depth--; }
-    | t_else { current_depth++; } Instruction { current_depth--; }
     ;
 
 While_Loop:
     t_while Save_Line_Number t_op Expression t_cp {
         int adr_condition_result = get_last_symbol();
         add_to_output("JMF %d ", adr_condition_result);
+        pop_symbol();
     }
     Save_Line_Number t_oa { current_depth++; } Instructions {
         add_to_instruction(output.instructions[$7], output.last_line+1);
         add_to_output("JMP %d", $2+1);
     }
     t_ca { current_depth--; }
-    | t_while Save_Line_Number t_op Expression t_cp {
-        int adr_condition_result = get_last_symbol();
-        add_to_output("JMF %d ", adr_condition_result);
-    }
-    Save_Line_Number { current_depth++; } Instruction {
-        current_depth--;
-        add_to_instruction(output.instructions[$7], output.last_line+1);
-        add_to_output("JMP %d", $2+1);
-    }
     ;
 
 Save_Line_Number:
@@ -367,7 +336,7 @@ Multiple_Declarations:
 
 Affectation_After_Declaration:
      /* Vide */
-    | t_eq Expression { exec_affectation(last_var_read); }
+    | t_eq Expression { exec_affectation(last_var_read); pop_symbol(); }
     ;
 
 Affectation:
@@ -378,6 +347,7 @@ Affectation:
       }
       else
         exec_affectation($1);
+        pop_symbol();
     }
     ;
 

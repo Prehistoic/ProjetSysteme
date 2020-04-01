@@ -3,6 +3,7 @@
 
 #define NB_REGISTRES 32
 #define MAX_INSTRUCTIONS 1000
+#define MAX_LR_STACK 50
 
 #define COP 1
 #define AFC 2
@@ -16,6 +17,8 @@
 #define INF 10
 #define SUP 11
 #define EQU 12
+#define CALL 13
+#define RET 14
 
 struct instruction
 {
