@@ -142,6 +142,7 @@
 %token <Integer> t_num
 %token <Variable> t_var
 
+%type <Variable> t_main
 %type <Integer> Save_Line_Number
 %type <Integer> Int_Function_Call
 %type <Integer> Params
@@ -176,6 +177,7 @@ Main:
       add_to_instruction(output.instructions[0], $5 + 1);
     } Instructions t_ca {
       if (cmpt_error == 0) {
+        clear_current_func_symbols(get_func_index($2));
         display_table();
         display_functions();
         display_output();
@@ -190,6 +192,7 @@ Main:
         add_to_instruction(output.instructions[0], $5);
       } Instructions t_return Expression t_sc t_ca {
         if (cmpt_error == 0) {
+          clear_current_func_symbols(get_func_index($2));
           display_table();
           display_functions();
           display_output();
@@ -204,14 +207,19 @@ Function_Declaration:
     t_int t_var t_op Params t_cp Save_Line_Number t_oa {
       add_function($2, $4, $6 +1);
       current_func = get_func_index($2);
-    } Instructions t_return Expression t_sc t_ca {
+    } Instructions t_return Expression {
+      add_to_output("COP 0 %d", get_last_symbol());
+    }
+    t_sc t_ca {
       add_to_output("RET");
+      clear_current_func_symbols(get_func_index($2));
     }
   | t_void t_var t_op Params t_cp Save_Line_Number t_oa {
       add_function($2, $4, $6 +1);
       current_func = get_func_index($2);
     } Instructions t_ca {
       add_to_output("RET");
+      clear_current_func_symbols(get_func_index($2));
     }
   ;
 
@@ -220,8 +228,8 @@ Params:
     | t_void { $$ = 0; }
     | t_int t_var {
         update_last_var($2);
-        int adr = push_symbol($2, current_depth, 0, current_func);
-        set_initialized($2, current_depth, current_func);
+        int adr = push_symbol($2, current_depth, 0, current_func+1);
+        set_initialized($2, current_depth, current_func+1);
       } Multiple_Params { $$ = $4 + 1; }
     ;
 
@@ -229,8 +237,8 @@ Multiple_Params:
       /* Vide */ { $$ = 0; }
     | t_comma t_int t_var {
         update_last_var($3);
-        int adr = push_symbol($3, current_depth, 0, current_func);
-        set_initialized($3, current_depth, current_func);
+        int adr = push_symbol($3, current_depth, 0, current_func+1);
+        set_initialized($3, current_depth, current_func+1);
       } Multiple_Params { $$ = $5 + 1; }
     ;
 
@@ -258,14 +266,14 @@ Print:
 Void_Function_Call:
   t_var t_op Args t_cp t_sc {
     if ($3 != get_function_params($1)) yyerror("mauvais nombre de paramètres");
-    add_to_output("CALL %d %d", get_function_start($1), output.last_line+1);
+    add_to_output("CALL %d %d %d %d", get_function_start($1), output.last_line+1, get_function_params($1), get_last_symbol());
   }
   ;
 
 Int_Function_Call:
   t_var t_op Args t_cp {
     if ($3 != get_function_params($1)) yyerror("mauvais nombre de paramètres");
-    add_to_output("CALL %d %d", get_function_start($1), output.last_line+1);
+    add_to_output("CALLR %d %d %d %d %d", get_function_start($1), output.last_line+1, get_function_params($1), get_last_symbol(), get_last_symbol()+1);
   }
   ;
 
@@ -288,13 +296,13 @@ If_Statement:
         add_to_output("JMP ");
         add_to_instruction(output.instructions[$6], output.last_line);
     }
-    t_ca { current_depth--; } Save_Line_Number
+    t_ca { clear_current_depth_symbols(current_depth); current_depth--; } Save_Line_Number
     Else_Statement { add_to_instruction(output.instructions[$13], output.last_line); }
     ;
 
 Else_Statement:
      /* Vide */
-    | t_else t_oa { current_depth++; } Instructions t_ca { current_depth--; }
+    | t_else t_oa { current_depth++; } Instructions t_ca { clear_current_depth_symbols(current_depth); current_depth--; }
     ;
 
 While_Loop:
@@ -307,7 +315,7 @@ While_Loop:
         add_to_instruction(output.instructions[$7], output.last_line+1);
         add_to_output("JMP %d", $2+1);
     }
-    t_ca { current_depth--; }
+    t_ca { clear_current_depth_symbols(current_depth); current_depth--; }
     ;
 
 Save_Line_Number:
@@ -372,7 +380,6 @@ Expression:
     }
     | Int_Function_Call {
         int new_adr = push_symbol("$", current_depth, 0, current_func);
-        add_to_output("AFC %d %d", new_adr, $1);
       }
     | Expression t_add Expression { exec_operation("ADD"); }
     | Expression t_sou Expression { exec_operation("SOU"); }

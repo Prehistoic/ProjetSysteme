@@ -1,24 +1,35 @@
-void pri(int a, int b)
+void g()
 {
-  a = 10;
-  printf(b);
+  int a = 100-5;
+  while(a>=90) {
+      printf(a);
+      a = a - 1;
+  }
+}
+
+int f(int a, int b)
+{
+  g();
+  int c = b / a;
+  int d = b - a;
+  printf(c);
+  printf(d);
+  return c;
 }
 
 void main()
 {
   int a = 10;
-  if (a == 10)
-  {
+  if(a == 10) {
     int b = 50;
-    if (b == 40) {
-      printf(b);
+    int c = f(a,b);
+    g();
+    while(c<10) {
+      c = c + 1;
+      printf(c);
     }
-    else {
-      while (b < 60) {
-        printf(b);
-        b = b + 1;
-      }
-    }
+  } else {
+    printf(a);
   }
   printf(a);
 }

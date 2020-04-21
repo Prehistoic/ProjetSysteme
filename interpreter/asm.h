@@ -4,6 +4,7 @@
 #define NB_REGISTRES 32
 #define MAX_INSTRUCTIONS 1000
 #define MAX_LR_STACK 50
+#define MAX_RI_STACK 50
 
 #define COP 1
 #define AFC 2
@@ -18,7 +19,8 @@
 #define SUP 11
 #define EQU 12
 #define CALL 13
-#define RET 14
+#define CALLR 14
+#define RET 15
 
 struct instruction
 {
@@ -26,11 +28,17 @@ struct instruction
   int val1;
   int val2;
   int val3;
+  int val4;
+  int val5;
 };
+
+void push_to_stack(int nb_params, int last_param);
+
+void pop_from_stack(int return_index);
 
 void execute();
 
-void add_instruction(int type, int val1, int val2, int val3);
+void add_instruction(int type, int val1, int val2, int val3, int val4, int val5);
 
 int execute_instruction(int index);
 

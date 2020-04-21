@@ -26,6 +26,10 @@ int get_const(const char *id, int depth, int func_id);
 
 int get_func_id(const char *id);
 
+void clear_current_func_symbols(int func_id);
+
+void clear_current_depth_symbols(int depth);
+
 void display_table();
 
 #endif

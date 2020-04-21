@@ -63,6 +63,38 @@ int get_const(const char *id, int depth, int func_id)
     return symbol_table.symbols[adr].constant;
 }
 
+void clear_current_func_symbols(int func_id)
+{
+  int done = 0;
+  while(done == 0) {
+      struct symbol *last = &(symbol_table.symbols[symbol_table.size - 1]);
+      if (last->function_id == func_id) {
+        pop_symbol();
+        if(symbol_table.size == 0) {
+          done = 1;
+        }
+      } else {
+        done = 1;
+      }
+  }
+}
+
+void clear_current_depth_symbols(int depth)
+{
+  int done = 0;
+  while(done == 0) {
+      struct symbol *last = &(symbol_table.symbols[symbol_table.size - 1]);
+      if (last->depth == depth) {
+        pop_symbol();
+        if(symbol_table.size == 0) {
+          done = 1;
+        }
+      } else {
+        done = 1;
+      }
+  }
+}
+
 void display_table()
 {
     printf("Symbol table :\n");
