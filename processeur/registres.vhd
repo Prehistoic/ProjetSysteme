@@ -51,16 +51,21 @@ begin
 
 	rw : process (CLK) is
 	begin
-		if falling_edge(CLK) then
+		if rising_edge(CLK) then
 			if RST = '0' then
-			reg <= (others => (others => '0'));
+				reg <= (others => (others => '0'));
 			else
 				if W = '1' then
 					reg(conv_integer(addrW)) <= DATA;
+--					if addrA = addrW then
+--						QA <= DATA;
+--					end if;
+--					if addrB = addrW then
+--						QB <= DATA;
+--					end if;
 				end if;
-				QA <= DATA when W = '1' and addrA = addrW else reg(conv_integer(addrA));
-				QB <= DATA when W = '1' and addrB = addrW else reg(conv_integer(addrB));
-				end if;				
+				QA <= reg(conv_integer(addrA));
+				QB <= reg(conv_integer(addrB));			
 			end if;
 		end if;
 	end process;

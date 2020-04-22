@@ -20,7 +20,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
-use IEEE.STD_LOGIC_ARITH.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
@@ -47,24 +47,24 @@ signal result : STD_LOGIC_VECTOR(15 downto 0);
 
 begin
 
-  calcul : process (A, B, Ctrl_Ual) is
-  begin
-    case Ctrl_Ual is
-      when "001" => -- add
-        result <= (x"00" & A) + (x"00" & B);
-      when "010" => -- mul 
-        result <= A * B;
-      when "011" => -- sub 
-        result <= (x"00" & A) - (x"00" & B);
-      when others => -- when "100" => div
-        result <= A * B;
-    end case;
-  end process;
+	calcul : process (A, B, Ctrl_Ual) is
+	begin
+		case Ctrl_Ual is
+			when "001" => -- add
+				result <= (x"00" & A) + (x"00" & B);
+			when "010" => -- sub 
+				result <= (x"00" & A) - (x"00" & B);
+			when "011" => -- mul 
+				result <= A * B;
+			when others => -- when "100" => div
+				result <= A * B;
+		end case;
+	end process;
 
-  S <= result(7 downto 0);
-  N <= result(7);
-  O <= '0' when result(15 downto 8) = x"00" else '1';
+	S <= result(7 downto 0);
+	N <= result(7);
+	O <= '0' when result(15 downto 8) = x"00" else '1';
 	Z <= '1' when result(7 downto 0) = x"00" else '0';
-  C <= result(8);
+	C <= result(8);
   
 end Behavioral;
