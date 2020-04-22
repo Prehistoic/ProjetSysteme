@@ -1,5 +1,10 @@
 #! /bin/bash
 # run.sh
 
-./compiler/compiler compiler/tests/my_program.c my_program.asm
-./interpreter/interpreter my_program.asm 
+cd compiler
+make
+cd ../interpreter
+make
+cd ../
+./compiler/compiler programs/my_program.c programs/my_program.asm
+./interpreter/interpreter programs/my_program.asm 
