@@ -9,9 +9,6 @@ struct instruction instructions[MAX_INSTRUCTIONS];
 int lr_stack[MAX_LR_STACK];
 int cmpt_lr = 0;
 
-int return_index_stack[MAX_RI_STACK];
-int cmpt_ri = 0;
-
 struct stack {
   int stack_pointer;
   int stack_content[1024];
@@ -75,14 +72,12 @@ void execute()
   print_printbuffer();
 }
 
-void add_instruction(int type, int val1, int val2, int val3, int val4, int val5)
+void add_instruction(int type, int val1, int val2, int val3)
 {
   instructions[cmpt_instructions].type = type;
   instructions[cmpt_instructions].val1 = val1;
   instructions[cmpt_instructions].val2 = val2;
   instructions[cmpt_instructions].val3 = val3;
-  instructions[cmpt_instructions].val4 = val4;
-  instructions[cmpt_instructions].val5 = val5;
   cmpt_instructions++;
 }
 
@@ -131,19 +126,16 @@ int execute_instruction(int index)
     regs[inst.val1] = regs[inst.val2] == regs[inst.val3];
     break;
   case CALL:
-    push_to_stack(inst.val3, inst.val4);
     lr_stack[cmpt_lr++] = inst.val2;
-    return_index_stack[cmpt_ri++] = -1;
     return inst.val1;
     break;
-  case CALLR:
-    push_to_stack(inst.val3, inst.val4);
-    lr_stack[cmpt_lr++] = inst.val2;
-    return_index_stack[cmpt_ri++] = inst.val5;
-    return inst.val1;
+  case PUSH:
+    push_to_stack(inst.val1, inst.val2);
+    break;
+  case POP:
+    pop_from_stack(inst.val1);
     break;
   case RET:
-    pop_from_stack(return_index_stack[--cmpt_ri]);
     return lr_stack[--cmpt_lr];
     break;
   }
@@ -157,7 +149,7 @@ int cmpt_breakpoints = 0;
 
 char mode = '\n';
 
-char *str_instructions[15] = {"COP", "AFC", "PRI", "ADD", "SOU", "MUL", "DIV", "JMP", "JMF", "INF", "SUP", "EQU", "CALL", "CALLR", "RET"};
+char *str_instructions[16] = {"COP", "AFC", "PRI", "ADD", "SOU", "MUL", "DIV", "JMP", "JMF", "INF", "SUP", "EQU", "CALL", "PUSH", "POP", "RET"};
 
 void print_registers()
 {
@@ -204,10 +196,6 @@ void print_instruction(struct instruction inst)
     printf(" %d", inst.val2);
   if (inst.val3 != -1)
     printf(" %d", inst.val3);
-  if (inst.val4 != -1)
-    printf(" %d", inst.val4);
-  if (inst.val5 != -1)
-    printf(" %d", inst.val5);
 }
 
 void print_program()

@@ -1,5 +1,5 @@
 main:
-	JMP 32
+	JMP 34
 	AFC 1 100
 	AFC 2 5
 	SOU 1 1 2
@@ -17,7 +17,9 @@ main:
 	COP 0 1
 	JMP 5
 	RET
-	CALL 1 19 0 1
+	PUSH 0 1
+	CALL 1 20
+	POP
 	COP 3 1
 	COP 4 0
 	DIV 3 3 4
@@ -36,24 +38,28 @@ main:
 	COP 1 0
 	AFC 2 10
 	EQU 1 1 2
-	JMF 1 56
+	JMF 1 62
 	AFC 2 50
 	COP 1 2
 	COP 3 0
 	COP 4 1
-	CALLR 18 43 2 4 5
+	PUSH 2 4
+	CALL 18 46
+	POP 5
 	COP 2 5
-	CALL 1 45 0 4
+	PUSH 0 4
+	CALL 1 50
+	POP
 	COP 5 2
 	AFC 6 10
 	INF 5 5 6
-	JMF 5 55
+	JMF 5 61
 	COP 5 2
 	AFC 6 1
 	ADD 5 5 6
 	COP 2 5
 	PRI 2
-	JMP 45
-	JMP 57
+	JMP 51
+	JMP 63
 	PRI 0
 	PRI 0

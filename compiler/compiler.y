@@ -266,14 +266,18 @@ Print:
 Void_Function_Call:
   t_var t_op Args t_cp t_sc {
     if ($3 != get_function_params($1)) yyerror("mauvais nombre de paramètres");
-    add_to_output("CALL %d %d %d %d", get_function_start($1), output.last_line+1, get_function_params($1), get_last_symbol());
+    add_to_output("PUSH %d %d", get_function_params($1), get_last_symbol());
+    add_to_output("CALL %d %d", get_function_start($1), output.last_line+1);
+    add_to_output("POP");
   }
   ;
 
 Int_Function_Call:
   t_var t_op Args t_cp {
     if ($3 != get_function_params($1)) yyerror("mauvais nombre de paramètres");
-    add_to_output("CALLR %d %d %d %d %d", get_function_start($1), output.last_line+1, get_function_params($1), get_last_symbol(), get_last_symbol()+1);
+    add_to_output("PUSH %d %d", get_function_params($1), get_last_symbol());
+    add_to_output("CALL %d %d", get_function_start($1), output.last_line+1);
+    add_to_output("POP %d", get_last_symbol()+1);
   }
   ;
 
