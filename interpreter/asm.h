@@ -22,6 +22,8 @@
 #define PUSH 14
 #define POP 15
 #define RET 16
+#define STR 17
+#define LDR 18
 
 struct instruction
 {

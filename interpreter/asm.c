@@ -138,6 +138,12 @@ int execute_instruction(int index)
   case RET:
     return lr_stack[--cmpt_lr];
     break;
+  case STR:
+    regs[inst.val1] = inst.val2;
+    break;
+  case LDR:
+    regs[inst.val1] = regs[regs[inst.val2]];
+    break;
   }
   return ++index;
 }
@@ -149,7 +155,7 @@ int cmpt_breakpoints = 0;
 
 char mode = '\n';
 
-char *str_instructions[16] = {"COP", "AFC", "PRI", "ADD", "SOU", "MUL", "DIV", "JMP", "JMF", "INF", "SUP", "EQU", "CALL", "PUSH", "POP", "RET"};
+char *str_instructions[18] = {"COP", "AFC", "PRI", "ADD", "SOU", "MUL", "DIV", "JMP", "JMF", "INF", "SUP", "EQU", "CALL", "PUSH", "POP", "RET", "STR", "LDR"};
 
 void print_registers()
 {

@@ -12,15 +12,22 @@ struct function_table
 struct function_table function_table = {0};
 
 int get_func_index(const char *id) {
-  return function_table.size-1;
+  for (int i = 0; i < function_table.size; i++)
+  {
+    struct function *current = &(function_table.functions[i]);
+    if (!strcmp(current->id, id))
+      return i;
+  }
+  return -1;
 }
 
-void add_function(const char *id, int nb_params, int function_start)
+void add_function(const char *id, int nb_params, int function_start, int return_type)
 {
   struct function *new = &(function_table.functions[function_table.size]);
   strcpy(new->id, id);
   new->nb_params = nb_params;
   new->function_start = function_start;
+  new->return_type = return_type;
   function_table.size++;
 }
 
@@ -42,6 +49,17 @@ int get_function_params(const char *id)
     struct function *current = &(function_table.functions[i]);
     if (!strcmp(current->id, id))
       return function_table.functions[i].nb_params;
+  }
+  return -1;
+}
+
+int return_pointer(const char *id)
+{
+  for (int i = 0; i < function_table.size; i++)
+  {
+    struct function *current = &(function_table.functions[i]);
+    if (!strcmp(current->id, id))
+      return function_table.functions[i].return_type;
   }
   return -1;
 }
