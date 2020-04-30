@@ -73,6 +73,30 @@
     strcpy(instruction, strcat(instruction, buffer));
   }
 
+  int current_args = 0;
+
+  void compare_params(char * id, int nb_args) {
+    int func_params = get_params_code(id);
+    if(current_args != func_params) {
+      if(nb_args != get_function_params(id)) {
+        yyerror("Mauvais nombre de paramètres !");
+      } else {
+        yyerror("Mauvais type(s) de paramètres !");
+      }
+    }
+    current_args = 0;
+  }
+
+  void update_current_args() {
+    int addr = get_last_symbol();
+    int new = is_pointer(addr) + 1;
+    if(current_args == 0) {
+      current_args = new;
+    } else {
+      current_args = current_args * 10 + new;
+    }
+  }
+
   // Gestion des différentes opérations
   void exec_operation(const char* operator) {
       int adr_first_operand = get_last_symbol()-1;
@@ -173,7 +197,8 @@ Functions:
 
 Main:
     t_void t_main t_op t_cp Save_Line_Number t_oa {
-      add_function("main", 0, -1, 0);
+      add_function("main");
+      set_function_attributes("main", 0, -1, 0);
       current_func++;
       add_to_instruction(output.instructions[0], $5 + 1);
     } Instructions t_ca {
@@ -188,7 +213,8 @@ Main:
       }
     }
     | t_int t_main t_op t_cp Save_Line_Number t_oa {
-        add_function("main", 0, -1, 0);
+        add_function("main");
+        set_function_attributes("main", 0, -1, 0);
         current_func++;
         add_to_instruction(output.instructions[0], $5);
       } Instructions t_return Expression t_sc t_ca {
@@ -207,14 +233,15 @@ Main:
 Function_Declaration:
     t_int t_var {
       current_func++;
+      add_function($2);
     } t_op Params t_cp Save_Line_Number t_oa {
-      add_function($2, $5, $7 +1, 0);
+      set_function_attributes($2, $5, $7 +1, 0);
     } Instructions t_return Expression {
-      if(is_pointer(get_last_symbol()) == 0) {
-      add_to_output("COP 0 %d", get_last_symbol());
-    } else {
-      yyerror("Mauvais type de retour, entier attendu !");
-    }
+        if(is_pointer(get_last_symbol()) == 0) {
+        add_to_output("COP 0 %d", get_last_symbol());
+      } else {
+        yyerror("Mauvais type de retour, entier attendu !");
+      }
     }
     t_sc t_ca {
       add_to_output("RET");
@@ -222,8 +249,9 @@ Function_Declaration:
     }
     | t_int t_mul t_var {
       current_func++;
+      add_function($3);
     } t_op Params t_cp Save_Line_Number t_oa {
-      add_function($3, $6, $8 +1, 1);
+      set_function_attributes($3, $6, $8 +1, 1);
     } Instructions t_return Expression {
         if(is_pointer(get_last_symbol()) == 1) {
         add_to_output("COP 0 %d", get_last_symbol());
@@ -237,8 +265,9 @@ Function_Declaration:
     }
     | t_void t_var {
       current_func++;
+      add_function($2);
     } t_op Params t_cp Save_Line_Number t_oa {
-        add_function($2, $5, $7 +1, 0);
+        set_function_attributes($2, $5, $7 +1, 0);
       } Instructions t_ca {
         add_to_output("RET");
         clear_current_func_symbols(current_func);
@@ -252,11 +281,13 @@ Params:
         update_last_var($2);
         int adr = push_symbol($2, current_depth, 0, 0, current_func);
         set_initialized($2, current_depth, current_func);
+        add_to_params_code(current_func, 1);
       } Multiple_Params { $$ = $4 + 1; }
     | t_int t_mul t_var {
         update_last_var($3);
         int adr = push_symbol($3, current_depth, 0, 1, current_func);
         set_initialized($3, current_depth, current_func);
+        add_to_params_code(current_func, 2);
       } Multiple_Params { $$ = $5 + 1; }
     ;
 
@@ -266,11 +297,13 @@ Multiple_Params:
         update_last_var($3);
         int adr = push_symbol($3, current_depth, 0, 0, current_func);
         set_initialized($3, current_depth, current_func);
+        add_to_params_code(current_func, 1);
       } Multiple_Params { $$ = $5 + 1; }
     | t_comma t_int t_mul t_var {
         update_last_var($4);
         int adr = push_symbol($4, current_depth, 0, 1, current_func);
         set_initialized($4, current_depth, current_func);
+        add_to_params_code(current_func, 2);
       } Multiple_Params { $$ = $6 + 1; }
     ;
 
@@ -300,7 +333,7 @@ Void_Function_Call:
     if(get_func_index($1) == -1) {
       yyerror("Fonction inconnue !");
     } else {
-      if ($3 != get_function_params($1)) yyerror("Mauvais nombre de paramètres");
+      compare_params($1,$3);
       add_to_output("PUSH %d %d", get_function_params($1), get_last_symbol());
       add_to_output("CALL %d %d", get_function_start($1), output.last_line+1);
       add_to_output("POP");
@@ -313,7 +346,7 @@ Int_Function_Call:
     if(get_func_index($1) == -1) {
       yyerror("Fonction inconnue !");
     } else {
-      if ($3 != get_function_params($1)) yyerror("Mauvais nombre de paramètres");
+      compare_params($1,$3);
       add_to_output("PUSH %d %d", get_function_params($1), get_last_symbol());
       add_to_output("CALL %d %d", get_function_start($1), output.last_line+1);
       add_to_output("POP %d", get_last_symbol()+1);
@@ -324,12 +357,12 @@ Int_Function_Call:
 
 Args:
       /* vide */ { $$ = 0; }
-    | Expression Multiple_Args { $$ = $2 + 1; }
+    | Expression Multiple_Args { $$ = $2 + 1; update_current_args(); }
     ;
 
 Multiple_Args:
       /* Vide */ { $$ = 0; }
-    | t_comma Expression Multiple_Args { $$ = $3 + 1; }
+    | t_comma Expression Multiple_Args { $$ = $3 + 1; update_current_args(); }
     ;
 
 If_Statement:
@@ -435,7 +468,7 @@ Expression:
     }
     | t_amp t_var {
         int current_adr = find_symbol($2, current_depth, current_func);
-        int new_adr = push_symbol("$",current_depth, 0, 0, current_func);
+        int new_adr = push_symbol("$",current_depth, 0, 1, current_func);
 
         if(!get_initialized($2, current_depth, current_func)) {
             yyerror("Variable non initialisée");
