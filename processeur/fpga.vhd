@@ -55,6 +55,14 @@ architecture Behavioral of fpga is
             P_OUT : out  STD_LOGIC_VECTOR (31 downto 0));
   end component;
 
+  component decoder is
+    Port ( Inst : in  STD_LOGIC_VECTOR (31 downto 0);
+           Op : out  STD_LOGIC_VECTOR (3 downto 0);
+           A : out  STD_LOGIC_VECTOR (7 downto 0);
+           B : out  STD_LOGIC_VECTOR (7 downto 0);
+           C : out  STD_LOGIC_VECTOR (7 downto 0));
+  end component;
+
   component registres is
     Port ( addrA : in  STD_LOGIC_VECTOR (3 downto 0);
             addrB : in  STD_LOGIC_VECTOR (3 downto 0);
@@ -97,10 +105,11 @@ architecture Behavioral of fpga is
   signal ip: STD_LOGIC_VECTOR(31 DOWNTO 0);
 	signal rst: std_logic;
 
-  signal lidi: stage;
-  signal diex: stage;
-  signal exmem: stage;
-  signal memre: stage;
+  signal dec2lidi: stage;
+  signal lidi2diex: stage;
+  signal diex2exmem: stage;
+  signal exmem2memre: stage;
+  signal memre2regs: stage;
 
   signal lidiMUXdiex: STD_LOGIC_VECTOR(7 DOWNTO 0);
   signal diexMUXexmem: STD_LOGIC_VECTOR(7 DOWNTO 0);
@@ -112,28 +121,84 @@ architecture Behavioral of fpga is
 	signal memreLCregs : std_logic;
 
 begin
+		
+	lidi: Pipeline PORT MAP (
+		dec2lidi.Op,
+		dec2lidi.A,
+		dec2lidi.B,
+		dec2lidi.C,
+		lidi2diex.Op,
+		lidi2diex.A,
+		lidi2diex.B,
+		lidi2diex.C,
+		CLK
+	);
+		
+	diex: Pipeline PORT MAP (
+		lidi2diex.Op,
+		lidi2diex.A,
+		lidi2diex.B,
+		lidi2diex.C,
+		diex2exmem.Op,
+		diex2exmem.A,
+		diex2exmem.B,
+		diex2exmem.C,
+		CLK
+	);
+		
+	exmem: Pipeline PORT MAP (
+		diex2exmem.Op,
+		diex2exmem.A,
+		diex2exmem.B,
+		diex2exmem.C,
+		exmem2memre.Op,
+		exmem2memre.A,
+		exmem2memre.B,
+		exmem2memre.C,
+		CLK
+	);
+		
+	memre: Pipeline PORT MAP (
+		exmem2memre.Op,
+		exmem2memre.A,
+		exmem2memre.B,
+		exmem2memre.C,
+		memre2regs.Op,
+		memre2regs.A,
+		memre2regs.B,
+		memre2regs.C,
+		CLK
+	);
 
   inst: instructions PORT MAP (
     ip,
     CLK,
-    lidi
+    ip
   );
 
+   dec: decoder PORT MAP (
+		 ip,
+		 dec2lidi.Op,
+		 dec2lidi.A,
+		 dec2lidi.B,
+		 dec2lidi.C
+   );
+
   regs: registres PORT MAP (
-    lidi.B,
-    lidi.C,
-    memre.A,
+    lidi2diex.B,
+    lidi2diex.C,
+    memre2regs.A,
     memreLCregs,
-    memre.B,
+    memre2regs.B,
     rst,
     CLK,
     lidiMUXdiex,
-    diex.C
+    lidi2diex.C
   );
 
   ual_map: ual PORT MAP (
     diexMUXexmem,
-    diex.C,
+    diex2exmem.C,
     diexLCexmem,
     '0',
     '0',
