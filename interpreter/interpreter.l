@@ -27,6 +27,8 @@ spaces [ \t\n]+
 "PUSH" return t_push;
 "POP" return t_pop;
 "RET" return t_ret;
+"STR" return t_str;
+"LDR" return t_ldr;
 [0-9]+ {
   yylval.Valeur=atoi(yytext);
   return t_val;

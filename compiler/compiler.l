@@ -22,6 +22,7 @@ spaces [ \t\n]+
 "}" return t_ca;
 "const" return t_const;
 "int" return t_int;
+"&" return t_amp;
 "+" return t_add;
 "-" return t_sou;
 "*" return t_mul;

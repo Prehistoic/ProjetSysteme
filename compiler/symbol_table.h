@@ -7,10 +7,11 @@ struct symbol
   int depth;
   int constant;
   int initialized;
+  int pointer;
   int function_id;
 };
 
-int push_symbol(const char *id, int depth, int constant, int func_id);
+int push_symbol(const char *id, int depth, int constant, int pointer, int func_id);
 
 void pop_symbol();
 
@@ -23,6 +24,8 @@ void set_initialized(const char *id, int depth, int func_id);
 int get_initialized(const char *id, int depth, int func_id);
 
 int get_const(const char *id, int depth, int func_id);
+
+int is_pointer(int index);
 
 int get_func_id(const char *id);
 

@@ -11,13 +11,14 @@ struct table
 
 struct table symbol_table = {0};
 
-int push_symbol(const char *id, int depth, int constant, int func_id)
+int push_symbol(const char *id, int depth, int constant, int pointer, int func_id)
 {
     struct symbol *new = &(symbol_table.symbols[symbol_table.size]);
     strcpy(new->id, id);
     new->initialized = 0;
     new->depth = depth;
     new->constant = constant;
+    new->pointer = pointer;
     new->function_id = func_id;
     symbol_table.size++;
     return symbol_table.size - 1;
@@ -63,6 +64,11 @@ int get_const(const char *id, int depth, int func_id)
     return symbol_table.symbols[adr].constant;
 }
 
+int is_pointer(int index)
+{
+  return symbol_table.symbols[index].pointer;
+}
+
 void clear_current_func_symbols(int func_id)
 {
   int done = 0;
@@ -103,10 +109,11 @@ void display_table()
         struct symbol *current = &(symbol_table.symbols[i]);
         int depth = current->depth;
         printf("index=%d\t", i);
-        printf("id=%s\tconst=%d\tinit=%d\tdepth=%d\tfunc_id=%d\n",
+        printf("id=%s\tconst=%d\tinit=%d\tdepth=%d\tfunc_id=%d\tpointer=%d\n",
           current->id, current->constant,
           current->initialized, current->depth,
-          current->function_id);
+          current->function_id,
+          current->pointer);
     }
     printf("\n");
 }

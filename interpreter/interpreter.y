@@ -26,7 +26,7 @@
 };
 
 %token t_main
-%token t_cop t_afc t_pri t_add t_sou t_mul t_div t_jmp t_jmf t_inf t_sup t_equ t_call t_ret t_push t_pop
+%token t_cop t_afc t_pri t_add t_sou t_mul t_div t_jmp t_jmf t_inf t_sup t_equ t_call t_ret t_push t_pop t_ldr t_str
 %token <Valeur> t_val
 
 %start File
@@ -61,6 +61,8 @@ Instruction:
   | t_pop t_val { add_instruction(POP, $2, -1, -1); }
   | t_pop { add_instruction(POP, -1, -1, -1); }
   | t_ret { add_instruction(RET, -1, -1, -1); }
+  | t_str t_val t_val { add_instruction(STR, $2, $3, -1); }
+  | t_ldr t_val t_val { add_instruction(LDR, $2, $3, -1); }
   ;
 
 %%
