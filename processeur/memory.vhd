@@ -49,7 +49,7 @@ begin
 
 	memproc : process (CLK) is
 	begin
-		if rising_edge(CLK) then
+		if falling_edge(CLK) then
 			if RST = '0' then
 				data <= (others => (others => '0'));
 			else

@@ -55,14 +55,6 @@ architecture Behavioral of fpga is
             P_OUT : out  STD_LOGIC_VECTOR (31 downto 0));
   end component;
 
-  component decoder is
-    Port ( Inst : in  STD_LOGIC_VECTOR (31 downto 0);
-           Op : out  STD_LOGIC_VECTOR (3 downto 0);
-           A : out  STD_LOGIC_VECTOR (7 downto 0);
-           B : out  STD_LOGIC_VECTOR (7 downto 0);
-           C : out  STD_LOGIC_VECTOR (7 downto 0));
-  end component;
-
   component registres is
     Port ( addrA : in  STD_LOGIC_VECTOR (3 downto 0);
             addrB : in  STD_LOGIC_VECTOR (3 downto 0);
@@ -102,10 +94,6 @@ architecture Behavioral of fpga is
     C: STD_LOGIC_VECTOR(7 downto 0);
   end record;
 
-  signal ip: STD_LOGIC_VECTOR(31 DOWNTO 0);
-	signal rst: std_logic;
-
-  signal dec2lidi: stage;
   signal lidi2diex: stage;
   signal diex2exmem: stage;
   signal exmem2memre: stage;
@@ -116,17 +104,29 @@ architecture Behavioral of fpga is
   signal exmemMUXmemin: STD_LOGIC_VECTOR(7 DOWNTO 0);
   signal memoutMUXmemre: STD_LOGIC_VECTOR(7 DOWNTO 0);
 	
-	signal diexLCexmem : std_logic;
-	signal exmemLCmemre : std_logic;
-	signal memreLCregs : std_logic;
+	signal diexLCexmem: STD_LOGIC_VECTOR(2 DOWNTO 0);
+	signal exmemLCmemre: std_logic;
+	signal memreLCregs: std_logic;
+	
+	signal rst: std_logic;
+   signal ip: STD_LOGIC_VECTOR(7 DOWNTO 0);
+   signal instr: STD_LOGIC_VECTOR(31 DOWNTO 0);
+   signal regs_QA: STD_LOGIC_VECTOR(7 DOWNTO 0);
+   signal regs_QB: STD_LOGIC_VECTOR(7 DOWNTO 0);
+	signal flag_N: std_logic;
+	signal flag_O: std_logic;
+	signal flag_Z: std_logic;
+	signal flag_C: std_logic;
+   signal ual_S: STD_LOGIC_VECTOR(7 DOWNTO 0);
+   signal mem_OUT: STD_LOGIC_VECTOR(7 DOWNTO 0);
 
 begin
 		
 	lidi: Pipeline PORT MAP (
-		dec2lidi.Op,
-		dec2lidi.A,
-		dec2lidi.B,
-		dec2lidi.C,
+		instr(27 DOWNTO 24),
+		instr(23 DOWNTO 16),
+		instr(15 DOWNTO 8),
+		instr(7 DOWNTO 0),
 		lidi2diex.Op,
 		lidi2diex.A,
 		lidi2diex.B,
@@ -137,8 +137,8 @@ begin
 	diex: Pipeline PORT MAP (
 		lidi2diex.Op,
 		lidi2diex.A,
-		lidi2diex.B,
-		lidi2diex.C,
+		lidiMUXdiex,
+		regs_QB,
 		diex2exmem.Op,
 		diex2exmem.A,
 		diex2exmem.B,
@@ -149,7 +149,7 @@ begin
 	exmem: Pipeline PORT MAP (
 		diex2exmem.Op,
 		diex2exmem.A,
-		diex2exmem.B,
+		diexMUXexmem,
 		diex2exmem.C,
 		exmem2memre.Op,
 		exmem2memre.A,
@@ -161,7 +161,7 @@ begin
 	memre: Pipeline PORT MAP (
 		exmem2memre.Op,
 		exmem2memre.A,
-		exmem2memre.B,
+		memoutMUXmemre,
 		exmem2memre.C,
 		memre2regs.Op,
 		memre2regs.A,
@@ -173,47 +173,48 @@ begin
   inst: instructions PORT MAP (
     ip,
     CLK,
-    ip
+    instr
   );
 
-   dec: decoder PORT MAP (
-		 ip,
-		 dec2lidi.Op,
-		 dec2lidi.A,
-		 dec2lidi.B,
-		 dec2lidi.C
-   );
-
   regs: registres PORT MAP (
-    lidi2diex.B,
-    lidi2diex.C,
-    memre2regs.A,
+    lidi2diex.B(3 DOWNTO 0),
+    lidi2diex.C(3 DOWNTO 0),
+    memre2regs.A(3 DOWNTO 0),
     memreLCregs,
     memre2regs.B,
     rst,
     CLK,
-    lidiMUXdiex,
-    lidi2diex.C
-  );
+    regs_QA,
+    regs_QB
+   );
 
   ual_map: ual PORT MAP (
-    diexMUXexmem,
+    diex2exmem.B,
     diex2exmem.C,
     diexLCexmem,
-    '0',
-    '0',
-    '0',
-    '0',
-    diexMUXexmem
+    flag_N,
+    flag_O,
+    flag_Z,
+    flag_C,
+    ual_S
   );
 
   mem: memory PORT MAP (
     exmemMUXmemin,
-    memoutMUXmemre,
+    exmem2memre.B,
     exmemLCmemre,
     rst,
     CLK,
-    memoutMUXmemre
+    mem_OUT
   );
+
+  lidiMUXdiex <= lidi2diex.B when lidi2diex.Op = x"02" or lidi2diex.Op = x"11" else regs_QA;
+  diexMUXexmem <= ual_S when (diex2exmem.Op >= x"04" and diex2exmem.Op <= x"09") else diex2exmem.B;
+  exmemMUXmemin <= exmem2memre.B;
+  memoutMUXmemre <= exmem2memre.B when exmem2memre.Op = x"02" or exmem2memre.Op = x"11" else mem_OUT;
+	
+	diexLCexmem <= diex2exmem.Op(2 DOWNTO 0);
+	exmemLCmemre <= '0' when lidi2diex.Op = x"11" else '1';
+	memreLCregs <= '0' when lidi2diex.Op = x"12" else '1';
 
 end Behavioral;

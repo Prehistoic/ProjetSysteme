@@ -50,11 +50,11 @@ begin
 	calcul : process (A, B, Ctrl_Ual) is
 	begin
 		case Ctrl_Ual is
-			when "001" => -- add
+			when "100" => -- add
 				result <= (x"00" & A) + (x"00" & B);
-			when "010" => -- sub 
+			when "101" => -- sub 
 				result <= (x"00" & A) - (x"00" & B);
-			when "011" => -- mul 
+			when "110" => -- mul 
 				result <= A * B;
 			when others => -- when "100" => div
 				result <= A * B;
