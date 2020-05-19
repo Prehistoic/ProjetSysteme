@@ -52,12 +52,12 @@ begin
 		if falling_edge(CLK) then
 			if RST = '0' then
 				data <= (others => (others => '0'));
-			else
+			else 
 				if RW = '1' then
-          result <= data(to_integer(unsigned(addr)));
-        else
-          data(to_integer(unsigned(addr))) <= P_IN;
-				end if;	
+					result <= data(to_integer(unsigned(addr)));
+				else
+					data(to_integer(unsigned(addr))) <= P_IN;
+				end if;
 			end if;
 		end if;
 	end process;

@@ -44,6 +44,13 @@ signal result : STD_LOGIC_VECTOR (31 downto 0);
 
 begin
 
+	inst <= (
+		0 => x"02000A00", -- AFC 0 10
+		1 => x"02000A00", -- AFC 0 10
+		2 => x"04000000", -- ADD 0 0 0
+		others => x"00000000"
+	);
+
 	instproc : process (CLK) is
 	begin
 		if rising_edge(CLK) then

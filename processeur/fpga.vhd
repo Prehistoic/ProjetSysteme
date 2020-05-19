@@ -32,7 +32,8 @@ use IEEE.STD_LOGIC_ARITH.ALL;
 --use UNISIM.VComponents.all;
 
 entity fpga is
-  Port ( CLK : in  STD_LOGIC);
+  Port ( RST : in  STD_LOGIC;
+			CLK : in  STD_LOGIC);
 end fpga;
 
 architecture Behavioral of fpga is
@@ -42,10 +43,10 @@ architecture Behavioral of fpga is
             A_in : in  STD_LOGIC_VECTOR (7 downto 0);
             B_in : in  STD_LOGIC_VECTOR (7 downto 0);
             C_in : in  STD_LOGIC_VECTOR (7 downto 0);
-            OP_out : in  STD_LOGIC_VECTOR (3 downto 0);
-            A_out : in  STD_LOGIC_VECTOR (7 downto 0);
-            B_out : in  STD_LOGIC_VECTOR (7 downto 0);
-            C_out : in  STD_LOGIC_VECTOR (7 downto 0);
+            OP_out : out  STD_LOGIC_VECTOR (3 downto 0);
+            A_out : out  STD_LOGIC_VECTOR (7 downto 0);
+            B_out : out  STD_LOGIC_VECTOR (7 downto 0);
+            C_out : out  STD_LOGIC_VECTOR (7 downto 0);
             CLK : in  STD_LOGIC);
   end component;
 
@@ -108,8 +109,12 @@ architecture Behavioral of fpga is
 	signal exmemLCmemre: std_logic;
 	signal memreLCregs: std_logic;
 	
-	signal rst: std_logic;
-   signal ip: STD_LOGIC_VECTOR(7 DOWNTO 0);
+	signal lidiR: boolean;
+	signal diexW: boolean;
+	signal exmemW: boolean;
+	signal waiting: boolean;
+	
+   signal ip: STD_LOGIC_VECTOR(7 DOWNTO 0) := x"00";
    signal instr: STD_LOGIC_VECTOR(31 DOWNTO 0);
    signal regs_QA: STD_LOGIC_VECTOR(7 DOWNTO 0);
    signal regs_QB: STD_LOGIC_VECTOR(7 DOWNTO 0);
@@ -182,7 +187,7 @@ begin
     memre2regs.A(3 DOWNTO 0),
     memreLCregs,
     memre2regs.B,
-    rst,
+    RST,
     CLK,
     regs_QA,
     regs_QB
@@ -203,18 +208,31 @@ begin
     exmemMUXmemin,
     exmem2memre.B,
     exmemLCmemre,
-    rst,
+    RST,
     CLK,
     mem_OUT
   );
 
-  lidiMUXdiex <= lidi2diex.B when lidi2diex.Op = x"02" or lidi2diex.Op = x"11" else regs_QA;
-  diexMUXexmem <= ual_S when (diex2exmem.Op >= x"04" and diex2exmem.Op <= x"09") else diex2exmem.B;
-  exmemMUXmemin <= exmem2memre.B;
-  memoutMUXmemre <= exmem2memre.B when exmem2memre.Op = x"02" or exmem2memre.Op = x"11" else mem_OUT;
+  lidiMUXdiex <= lidi2diex.B when lidi2diex.Op = x"00" or lidi2diex.Op = x"02" or lidi2diex.Op = x"12" else regs_QA;
+  diexMUXexmem <= ual_S when (diex2exmem.Op >= x"04" and diex2exmem.Op <= x"0C") else diex2exmem.B;
+  exmemMUXmemin <= exmem2memre.A when lidi2diex.Op = x"11" else exmem2memre.B;
+  memoutMUXmemre <= mem_OUT when exmem2memre.Op = x"12" else exmem2memre.B;
 	
 	diexLCexmem <= diex2exmem.Op(2 DOWNTO 0);
 	exmemLCmemre <= '0' when lidi2diex.Op = x"11" else '1';
-	memreLCregs <= '0' when lidi2diex.Op = x"12" else '1';
+	memreLCregs <= '0' when lidi2diex.Op = x"11" else '1';
+	
+	lidiR <= lidi2diex.Op = x"02" or lidi2diex.Op = x"12";
+	diexW <= lidi2diex.Op /= x"11";
+	exmemW <= lidi2diex.Op /= x"11";
+	waiting <= (lidiR and diexW and (lidi2diex.B = diex2exmem.A or lidi2diex.C = diex2exmem.A)) 
+			  or (lidiR and exmemW and (lidi2diex.B = exmem2memre.A or lidi2diex.C = exmem2memre.A));
+
+	run : process (CLK) is
+	begin
+		if (rising_edge(CLK) and not waiting) then
+			ip <= ip + x"01";
+		end if;
+	end process;
 
 end Behavioral;

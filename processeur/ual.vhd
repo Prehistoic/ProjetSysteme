@@ -57,7 +57,7 @@ begin
 			when "110" => -- mul 
 				result <= A * B;
 			when others => -- when "100" => div
-				result <= A * B;
+				result <= x"0000";
 		end case;
 	end process;
 
