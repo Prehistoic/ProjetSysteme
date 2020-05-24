@@ -55,19 +55,19 @@ begin
 			if RST = '0' then
 				reg <= (others => (others => '0'));
 			else
-				if W = '1' then
+				if W = '1' and addrW /= "UUUU" then
 					reg(conv_integer(addrW)) <= DATA;
---					if addrA = addrW then
---						QA <= DATA;
---					end if;
---					if addrB = addrW then
---						QB <= DATA;
---					end if;
-				end if;
-				QA <= reg(conv_integer(addrA));
-				QB <= reg(conv_integer(addrB));			
+  					if addrA = addrW then
+  						QA <= DATA;
+  					end if;
+  					if addrB = addrW then
+  						QB <= DATA;
+  					end if;
+				end if;			
 			end if;
 		end if;
+		QA <= reg(conv_integer(addrA));
+		QB <= reg(conv_integer(addrB));
 	end process;
 
 end Behavioral;

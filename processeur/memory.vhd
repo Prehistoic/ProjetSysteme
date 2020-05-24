@@ -57,6 +57,7 @@ begin
 					result <= data(to_integer(unsigned(addr)));
 				else
 					data(to_integer(unsigned(addr))) <= P_IN;
+					result <= data(to_integer(unsigned(addr)));
 				end if;
 			end if;
 		end if;

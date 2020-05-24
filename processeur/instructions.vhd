@@ -33,6 +33,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity instructions is
 	Port ( addr : in  STD_LOGIC_VECTOR (7 downto 0);
+					WAITING : in  STD_LOGIC;
 					CLK : in  STD_LOGIC;
 					P_OUT : out  STD_LOGIC_VECTOR (31 downto 0));
 end instructions;
@@ -45,16 +46,24 @@ signal result : STD_LOGIC_VECTOR (31 downto 0);
 begin
 
 	inst <= (
-		0 => x"02000A00", -- AFC 0 10
-		1 => x"02000A00", -- AFC 0 10
-		2 => x"04000000", -- ADD 0 0 0
-		others => x"00000000"
+		0 => x"02010A00", -- AFC 1 10
+		5 => x"01000100", -- COP 0 1
+		10 => x"02010500", -- AFC 1 5
+		15 => x"04010001", -- ADD 1 0 1
+		20 => x"06000100", -- MUL 0 1 0
+		25 => x"05000001", -- SUB 0 0 1
+		30 => x"01020000", -- COP 2 0
+		others => "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU" -- NOP
 	);
 
 	instproc : process (CLK) is
 	begin
 		if rising_edge(CLK) then
-			result <= inst(to_integer(unsigned(addr)));
+		   if WAITING = '1' and false then
+				result <= x"00000000";
+			else
+				result <= inst(to_integer(unsigned(addr)));
+			end if;
 		end if;
 	end process;
 

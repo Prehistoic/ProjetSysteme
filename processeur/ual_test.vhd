@@ -107,37 +107,37 @@ BEGIN
 		-- add
 		A <= x"05";
 		B <= x"03";
-		Ctrl_Ual <= "001";
+		Ctrl_Ual <= "100";
 		wait for CLK_period*5;
 		
 		-- sub
 		A <= x"05";
 		B <= x"03";
-		Ctrl_Ual <= "010";
+		Ctrl_Ual <= "101";
 		wait for CLK_period*5;
 		
 		-- mul
 		A <= x"02";
 		B <= x"02";
-		Ctrl_Ual <= "011";
+		Ctrl_Ual <= "110";
 		wait for CLK_period*5;
 		
 		-- Flag O/C/Z
 		A <= x"FF";
 		B <= x"01";
-		Ctrl_Ual <= "001";
+		Ctrl_Ual <= "100";
 		wait for CLK_period*5;
 		
 		-- Flag O/C/N
 		A <= x"00";
 		B <= x"01";
-		Ctrl_Ual <= "010";
+		Ctrl_Ual <= "101";
 		wait for CLK_period*5;
 		
 		-- Flag Z
 		A <= x"05";
 		B <= x"05";
-		Ctrl_Ual <= "010";
+		Ctrl_Ual <= "101";
 		wait for CLK_period*5;
 
       wait;
