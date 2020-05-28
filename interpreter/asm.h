@@ -1,7 +1,7 @@
 #ifndef ASM_H
 #define ASM_H
 
-#define NB_REGISTRES 32
+#define NB_REGISTRES 16
 #define MAX_INSTRUCTIONS 1000
 #define MAX_LR_STACK 50
 #define MAX_RI_STACK 50

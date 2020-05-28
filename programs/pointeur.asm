@@ -1,0 +1,10 @@
+main:
+	JMP 1
+	AFC 1 20
+	COP 0 1
+	STR 2 0
+	COP 1 2
+	PRI 0
+	LDR 3 1
+	COP 2 3
+	PRI 2

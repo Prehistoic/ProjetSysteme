@@ -9,7 +9,8 @@ struct instruction instructions[MAX_INSTRUCTIONS];
 int lr_stack[MAX_LR_STACK];
 int cmpt_lr = 0;
 
-struct stack {
+struct stack
+{
   int stack_pointer;
   int stack_content[1024];
 };
@@ -21,26 +22,35 @@ int cmpt_instructions = 0;
 int print_buffer[100];
 int cmpt_print_buffer = 0;
 
-void push_to_stack(int nb_params, int last_param) {
+void push_to_stack(int nb_params, int last_param)
+{
   int params[nb_params];
-  for(int j=nb_params-1; j>=0; j--) {
+  for (int j = nb_params - 1; j >= 0; j--)
+  {
     params[j] = regs[last_param--];
   }
-  for(int i=0; i<NB_REGISTRES; i++) {
+  for (int i = 0; i < NB_REGISTRES; i++)
+  {
     my_stack.stack_content[my_stack.stack_pointer] = regs[i];
     my_stack.stack_pointer++;
   }
-  for(int k=0; k<nb_params; k++) {
+  for (int k = 0; k < nb_params; k++)
+  {
     regs[k] = params[k];
   }
 }
 
-void pop_from_stack(int return_index) {
+void pop_from_stack(int return_index)
+{
   int return_value = regs[0];
-  for(int i=NB_REGISTRES-1; i>=0; i--) {
-    if(i != return_index) {
-      regs[i] = my_stack.stack_content[my_stack.stack_pointer-1];
-    } else {
+  for (int i = NB_REGISTRES - 1; i >= 0; i--)
+  {
+    if (i != return_index)
+    {
+      regs[i] = my_stack.stack_content[my_stack.stack_pointer - 1];
+    }
+    else
+    {
       regs[i] = return_value;
     }
     my_stack.stack_pointer--;
@@ -163,7 +173,7 @@ void print_registers()
   for (i = 0; i < NB_REGISTRES; i++)
   {
     printf("R%-2d 0x%08d  ", i, regs[i]);
-    if ((i + 1) % 8 == 0)
+    if ((i + 1) % 4 == 0)
       printf("\n");
   }
   printf("\n");
@@ -210,7 +220,7 @@ void print_program()
   clear_console();
   for (i = 0; i < cmpt_instructions; i++)
   {
-    printf("%5d  ", i);
+    printf("%5d  ", i + 1);
     print_instruction(instructions[i]);
     printf("\n");
   }

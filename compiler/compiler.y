@@ -216,7 +216,7 @@ Main:
         add_function("main");
         set_function_attributes("main", 0, -1, 0);
         current_func++;
-        add_to_instruction(output.instructions[0], $5);
+        add_to_instruction(output.instructions[0], $5 + 1);
       } Instructions t_return Expression t_sc t_ca {
         if (cmpt_error == 0) {
           clear_current_func_symbols(current_func);
