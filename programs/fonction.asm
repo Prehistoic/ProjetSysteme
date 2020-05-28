@@ -1,0 +1,28 @@
+main:
+	JMP 11
+	PRI 0
+	COP 3 0
+	COP 4 1
+	ADD 3 3 4
+	COP 2 3
+	COP 3 2
+	COP 0 3
+	RET
+	PRI 1
+	RET
+	AFC 1 10
+	COP 0 1
+	AFC 2 20
+	COP 1 2
+	COP 3 0
+	COP 4 1
+	PUSH 2 4
+	CALL 1 19
+	POP 5
+	COP 2 5
+	PRI 2
+	COP 5 0
+	COP 6 1
+	PUSH 2 6
+	CALL 9 26
+	POP

@@ -1,0 +1,16 @@
+main:
+	JMP 1
+	AFC 1 10
+	COP 0 1
+	AFC 2 20
+	COP 1 2
+	AFC 3 50
+	COP 2 3
+	COP 4 1
+	COP 5 2
+	ADD 4 4 5
+	COP 5 0
+	DIV 4 4 5
+	COP 3 4
+	PRI 3
+	AFC 4 0

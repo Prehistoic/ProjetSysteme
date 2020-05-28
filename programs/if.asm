@@ -1,0 +1,27 @@
+main:
+	JMP 1
+	AFC 1 10
+	COP 0 1
+	COP 1 0
+	AFC 2 0
+	SUP 1 1 2
+	JMF 1 13
+	COP 1 0
+	AFC 2 1
+	SOU 1 1 2
+	COP 0 1
+	PRI 0
+	JMP 13
+	AFC 2 50
+	COP 1 2
+	COP 2 1
+	AFC 3 80
+	SUP 2 2 3
+	JMF 2 21
+	PRI 1
+	JMP 26
+	AFC 2 20
+	COP 3 0
+	ADD 2 2 3
+	COP 1 2
+	PRI 1
