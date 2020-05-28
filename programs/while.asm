@@ -12,3 +12,4 @@ main:
 	COP 0 1
 	PRI 0
 	JMP 3
+	PRI 0
