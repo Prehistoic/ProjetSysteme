@@ -215,14 +215,14 @@ begin
     mem_OUT
   );
 
-  lidiMUXdiex <= lidi2diex.B when lidi2diex.Op = x"02" or lidi2diex.Op = x"12" else regs_QA;
+  lidiMUXdiex <= lidi2diex.B when lidi2diex.Op = x"02" or lidi2diex.Op = x"11" or lidi2diex.Op = x"12" else regs_QA;
   diexMUXexmem <= ual_S when (diex2exmem.Op >= x"04" and diex2exmem.Op <= x"0C") else diex2exmem.B;
-  exmemMUXmemin <= exmem2memre.A when lidi2diex.Op = x"11" else exmem2memre.B;
+  exmemMUXmemin <= exmem2memre.A when exmem2memre.Op = x"11" else exmem2memre.B;
   memoutMUXmemre <= mem_OUT when exmem2memre.Op = x"12" else exmem2memre.B;
 	
 	diexLCexmem <= diex2exmem.Op(2 DOWNTO 0);
-	exmemLCmemre <= '0' when lidi2diex.Op = x"11" else '1';
-	memreLCregs <= '0' when lidi2diex.Op = x"11" else '1';
+	exmemLCmemre <= '0' when exmem2memre.Op = x"11" else '1';
+	memreLCregs <= '0' when memre2regs.Op = x"11" else '1';
 	
 	lidiR <= lidi2diex.Op /= "UUUUU" and lidi2diex.Op /= x"00" and lidi2diex.Op /= x"02" and lidi2diex.Op /= x"12";
 	diexW <= diex2exmem.Op /= "UUUUU" and diex2exmem.Op /= x"00" and diex2exmem.Op /= x"11";

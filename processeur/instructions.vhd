@@ -48,11 +48,11 @@ begin
 	inst <= (
 		0 => x"02010A00", -- AFC 1 10
 		5 => x"01000100", -- COP 0 1
-		10 => x"02010500", -- AFC 1 5
-		15 => x"04010001", -- ADD 1 0 1
-		20 => x"06000100", -- MUL 0 1 0
-		25 => x"05000001", -- SUB 0 0 1
-		30 => x"01020000", -- COP 2 0
+		6 => x"11020500", -- STR 2 5
+		7 => x"12010200", -- LDR 1 2
+		12 => x"04010001", -- ADD 1 0 1
+		17 => x"06000100", -- MUL 0 1 0
+		22 => x"05000001", -- SUB 0 0 1
 		others => "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU" -- NOP
 	);
 
@@ -60,7 +60,7 @@ begin
 	begin
 		if rising_edge(CLK) then
 		   if WAITING = '1' and false then
-				result <= x"00000000";
+				result <= "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU"; -- NOP
 			else
 				result <= inst(to_integer(unsigned(addr)));
 			end if;
